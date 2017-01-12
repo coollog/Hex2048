@@ -20,7 +20,7 @@
 <script src="InputHandler.js"></script>
 <script src="GestureHandler.js"></script>
 <script src="Hexagon.js"></script>
-<!--<script src="Board.js"></script>-->
+<script src="Board.js"></script>
 
 <script>
   const ASSETS = {
@@ -39,4 +39,8 @@
   
   const drawTimer = new DrawTimer(canvas, FPS);
   drawTimer.start();
+  
+  // Start drawing the board
+  const board = new Board(canvas, new Coordinate(50, 50), 5, 30);
+  board.createAll();
 </script>
