@@ -43,4 +43,9 @@
   // Start drawing the board
   const board = new Board(canvas, new Coordinate(50, 50), 5, 30);
   board.createAll();
+  
+  // Generate a new board
+  for (let i = 0; i < 40 - 1; i ++) {
+    board.addRandom();
+  }
 </script>

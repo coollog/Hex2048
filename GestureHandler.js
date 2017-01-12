@@ -19,14 +19,17 @@ class GestureHandler {
   }
   
   _draw(imgRightArrow = ASSETS.RIGHT_ARROW) {
+    const ARROW_MAX_SCALE = 0.2;
+    
     this._canvas.drawWithOpacity(0.5, () => {
       if (this._dragging) {
         this._canvas.drawLine(this._dragStartCoord, this._dragCurrentCoord);
         
         if (this._hasGesture()) {
           const originCoord = new Coordinate(0, -imgRightArrow.height / 2);
-          const angle = -this._gesture * Math.PI / 3;
-          const scale = this._dragDistance() / imgRightArrow.width;
+          const angle = -this._gesture * Math.PI / 3 - Math.PI / 6;
+          const scale = Math.min(
+              ARROW_MAX_SCALE, this._dragDistance() / imgRightArrow.width);
           this._canvas.drawImage(
               imgRightArrow, this._dragStartCoord, originCoord, angle, scale, 
               scale);
@@ -74,10 +77,7 @@ class GestureHandler {
     if (!this._hasGesture()) return false;
     
     // Get the closest angle.
-    // 1. Get the angle.
-    // 2. Add 360deg/12 so that everything fits within 360deg.
-    // 3. Split to get the angle index.
-    const normalizedAngle = (this._dragAngle() + Math.PI / 6) % (2 * Math.PI);
+    const normalizedAngle = this._dragAngle() % (2 * Math.PI);
     const angleIndex = Math.floor(normalizedAngle / (Math.PI / 3));
     
     this._gesture = angleIndex;
@@ -102,10 +102,10 @@ class Gesture {
 
 // Counter-clockwise, from right.
 Gesture.DIRECTIONS = {
-  RIGHT: 0, 
-  TOP_RIGHT: 1, 
+  TOP_RIGHT: 0, 
+  UP: 1,
   TOP_LEFT: 2,
-  LEFT: 3, 
-  BOTTOM_LEFT: 4, 
+  BOTTOM_LEFT: 3, 
+  DOWN: 4,
   BOTTOM_RIGHT: 5
 };

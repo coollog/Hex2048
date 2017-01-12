@@ -73,10 +73,16 @@ class Board {
   
   // Find an empty block and put a 2 or 4 in it
   addRandom() {
-    let added = false;
+    let added = true;
     while (added) {
-      let x = Math.floor(Math.random() * (this._numPerEdge * 2) - 1);
-      let y = Math.floor(Math.random() * (this._numPerEdge * 2) - 1);
+      let x = Math.floor(Math.random() * (this._numPerEdge * 2 - 1));
+      let y = Math.floor(Math.random() * (this._numPerEdge * 2 - 1));
+      
+      let hexagon = this.hexagons[x][y];
+      if (typeof hexagon !== 'undefined' && hexagon.text == '') {
+        added = false;
+        hexagon.text = (Math.floor(Math.random() * 2)) ? '2' : '4'; 
+      } 
     }
   }
 }

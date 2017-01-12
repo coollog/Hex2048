@@ -30,10 +30,10 @@ class Canvas {
   
   // Draw text centered at coord
   drawText(coord, text) {
+    this._context.font='30px Arial';
     this._context.textAlign = 'center';
     this._context.textBaseline = 'middle';
     this._context.fillText(text, ...coord.toArray());
-    this._context.stroke();
   }
   
   // Draw 'img' at 'destCoord', rotated by 'angle', scaled by 'scaleX' and
