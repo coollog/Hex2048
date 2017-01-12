@@ -1,0 +1,39 @@
+<style>
+  #game {
+    border: 1px solid black;
+  }
+</style>
+
+<canvas id="game" width="800" height="600"></canvas>
+
+<script>
+  class Hexagon {
+    constructor(x, y, radius) {
+      this.centerX = x;
+      this.centerY = y;
+      this.radius = radius;
+    }
+
+    draw(context) {
+      for (var i = 0; i < 6; i ++) {
+        const startAngle = i * Math.PI / 3;
+        const endAngle = (i + 1) * Math.PI / 3;
+
+        const startX = this.centerX + Math.cos(startAngle) * this.radius;
+        const startY = this.centerY + Math.sin(startAngle) * this.radius;
+        const endX = this.centerX + Math.cos(endAngle) * this.radius;
+        const endY = this.centerY + Math.sin(endAngle) * this.radius;
+
+        context.moveTo(startX, startY);
+        context.lineTo(endX, endY);
+        context.stroke();
+      }
+    }
+  }
+
+  const canvas = document.getElementById('game');
+  const context = canvas.getContext('2d');
+
+  const hex1 = new Hexagon(200, 200, 20);
+  hex1.draw(context);
+</script>
