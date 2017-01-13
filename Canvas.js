@@ -11,8 +11,8 @@ class Canvas {
   }
   
   // Alias for DOM addEventListener.
-  listen(eventType, handler) {
-    this._canvas.addEventListener(eventType, handler);
+  listen() {
+    this._canvas.addEventListener(...arguments);
   }
   
   // Clears the context.
@@ -28,9 +28,24 @@ class Canvas {
     this._context.stroke();
   }
   
+  // Draw polygon shape (will apply color and stroke)
+  drawPolygon(coords, color) {
+    this._context.beginPath();
+    this._context.moveTo(...coords[0].toArray());
+    for (let i = 1; i < coords.length; i++) {
+      this._context.lineTo(...coords[i].toArray());
+    }
+    this._context.lineTo(...coords[0].toArray()); // To close the shape
+    this._context.closePath();
+    this._context.fillStyle = color;
+    this._context.fill();
+    this._context.stroke();
+  }
+  
   // Draw text centered at coord
   drawText(coord, text) {
     this._context.font='30px Arial';
+    this._context.fillStyle = 'black';
     this._context.textAlign = 'center';
     this._context.textBaseline = 'middle';
     this._context.fillText(text, ...coord.toArray());

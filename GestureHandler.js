@@ -1,6 +1,7 @@
+// import 'Controller'
 // import 'DrawTimer'
 // import 'Events'
-// import 'Input'
+// import 'InputHandler'
 
 /**
  * Handles the directional gesture.
@@ -11,11 +12,11 @@ class GestureHandler {
     this._dragging = false;
     
     // Attach event listeners.
-    Events.on(InputHandler.EVENT_TYPES.DRAG_START, this._dragStart.bind(this));
-    Events.on(InputHandler.EVENT_TYPES.DRAG, this._drag.bind(this));
-    Events.on(InputHandler.EVENT_TYPES.DRAG_END, this._dragEnd.bind(this));
+    Events.on(InputHandler.EVENT_TYPES.DRAG_START, this._dragStart, this);
+    Events.on(InputHandler.EVENT_TYPES.DRAG, this._drag, this);
+    Events.on(InputHandler.EVENT_TYPES.DRAG_END, this._dragEnd, this);
     
-    Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw.bind(this));
+    Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this);
   }
   
   _draw(imgRightArrow = ASSETS.RIGHT_ARROW) {
@@ -52,7 +53,8 @@ class GestureHandler {
     this._dragCurrentCoord = mousePosition;
     
     if (this._updateGesture()) {
-      Events.dispatch(GestureHandler.EVENT_TYPES.DIRECTION, new Gesture(this._gesture));
+      Events.dispatch(Controller.EVENT_TYPES.INPUT_DIRECTION, 
+          new InputDirection(this._gesture));
     }
   }
   
@@ -85,27 +87,3 @@ class GestureHandler {
 }
 
 GestureHandler.DRAG_THRESHOLD = 20;
-GestureHandler.EVENT_TYPES = {
-  DIRECTION: 'gesture-direction'
-};
-
-
-class Gesture {
-  constructor(direction) {
-    this._direction = direction;
-  }
-  
-  get direction() {
-    return this._direction;
-  }
-}
-
-// Counter-clockwise, from right.
-Gesture.DIRECTIONS = {
-  TOP_RIGHT: 0, 
-  UP: 1,
-  TOP_LEFT: 2,
-  BOTTOM_LEFT: 3, 
-  DOWN: 4,
-  BOTTOM_RIGHT: 5
-};

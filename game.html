@@ -1,26 +1,30 @@
 <style>
   #game {
     border: 1px solid black;
+    outline: none;
   }
   assets {
     display: none;
   }
 </style>
 
-<canvas id="game" width="800" height="600"></canvas>
+<canvas id="game" width="800" height="600" tabindex="1"></canvas>
 
 <assets>
   <img id="img-right-arrow" src="assets/right_arrow.png" />
 </assets>
 
+<script src="Coordinate.js"></script>
 <script src="Events.js"></script>
 <script src="Canvas.js"></script>
 <script src="DrawTimer.js"></script>
-<script src="Coordinate.js"></script>
+<script src="Controller.js"></script>
+<script src="InputDirection.js"></script>
 <script src="InputHandler.js"></script>
+<script src="KeyHandler.js"></script>
 <script src="GestureHandler.js"></script>
 <script src="Hexagon.js"></script>
-<!--<script src="Board.js"></script>-->
+<script src="Board.js"></script>
 
 <script>
   const ASSETS = {
@@ -29,14 +33,15 @@
   const FPS = 60;
 
   const canvas = new Canvas('game');
-
-  // const board = new Board(50, 50, 5, 30);
-  // board.createAll();
-  // board.drawAll(context);
   
   const inputHandler = new InputHandler(canvas);
+  const keyHandler = new KeyHandler(canvas);
   const gestureHandler = new GestureHandler(canvas);
   
   const drawTimer = new DrawTimer(canvas, FPS);
   drawTimer.start();
+  
+  // Start drawing the board
+  const board = new Board(canvas, new Coordinate(50, 20), 5, 30);
+  board.createAll();
 </script>

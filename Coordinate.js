@@ -1,3 +1,6 @@
+/**
+ * Represents an (x,y) coordinate.
+ */
 class Coordinate {
   constructor(x, y) {
     this._x = x;
