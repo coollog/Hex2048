@@ -43,10 +43,10 @@ class Canvas {
   }
   
   // Draw text centered at coord
-  drawText(coord, text) {
-    this._context.font='30px Arial';
+  drawText(coord, text, textAlign, font) {
+    this._context.font = font;
     this._context.fillStyle = 'black';
-    this._context.textAlign = 'center';
+    this._context.textAlign = textAlign;
     this._context.textBaseline = 'middle';
     this._context.fillText(text, ...coord.toArray());
   }

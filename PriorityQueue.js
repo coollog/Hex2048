@@ -1,4 +1,11 @@
-// Iterable Priority Queue attaches priorities to keys, values.
+/**
+ * Iterable Priority Queue attaches priorities to keys, values.
+ * 
+ * The hierarchy goes priority->key->value. There can be multiple key-value 
+ * pairs per priority. Only one key can be used per priority, but the same key
+ * can be used across multiple priorities.
+ * ie. Each priority has a set of keys, each of which has a single value.
+ */
 class PriorityQueue {
   constructor() {
     // Linear representation of binary minheap tree.
@@ -11,21 +18,27 @@ class PriorityQueue {
     this._nodes = {};
   }
   
-  // Returns true if node(s) with 'priority' exists.
-  has(priority) {
-    return priority in this._priorityMap;
+  // Returns true if node(s) with 'priority' has 'key'.
+  has(priority, key) {
+    return this._hasPriority(priority) && this._keyMap.has(key);
   }
   
-  // Returns the data of node(s) with 'priority'.
-  get(priority) {
-    if (!has(priority)) return null;
+  // Returns the value associated with 'key' of node with 'priority'.
+  get(priority, key) {
+    if (!this.has(priority, key)) return null;
     
-    return this._priorityMap[priority].data;
+    const nodeId = this._priorityMap[priority];
+    const node = this._getNode(nodeId);
+    
+    return node.get(key);
   }
   
   // Push 'data' into the queue with 'priority'. Replaces any existing value
   // associated with 'key' if 'key' exists.
   push(priority, key, value) {
+    // Only one node is created per priority, so key-values on the same priority
+    // are appended to the same node. Any new values replace old values for the
+    // same key.
     if (this.has(priority)) {
       const nodeId = this._priorityMap[priority];
       this._keyMap.add(key, nodeId);
@@ -163,9 +176,16 @@ class PriorityQueue {
   _getNode(nodeId) {
     return this._nodes[nodeId];
   }
+  
+  // Returns true if node(s) with 'priority' exists.
+  _hasPriority(priority) {
+    return priority in this._priorityMap;
+  }
 };
 
-// A priority queue node.
+/**
+ * A priority queue node.
+ */
 PriorityQueue.Node = class {
   constructor(priority, data = new Map()) {
     this._priority = priority;
@@ -217,7 +237,9 @@ PriorityQueue.Node = class {
 
 PriorityQueue.Node._NextNodeId = 0;
 
-// DDO for a key-value pair.
+/**
+ * DDO for a key-value pair.
+ */
 PriorityQueue.KeyValue = class {
   // Creates a KeyValue with 'key', 'value'. 'key' can be tuple array with
   // ['key', 'value'].
@@ -239,7 +261,9 @@ PriorityQueue.KeyValue = class {
   }
 };
 
-// Stores mapping from key to Node references.
+/**
+ * Stores mapping from key to Node references.
+ */
 PriorityQueue.KeyMap = class {
   constructor() {
     this._keyMap = {};

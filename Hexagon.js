@@ -54,7 +54,7 @@ class Hexagon {
   
   // Draw the text
   drawText() {
-    this._canvas.drawText(this._center, this._text);
+    this._canvas.drawText(this._center, this._text, 'center', '30px Arial');
   }
 }
 

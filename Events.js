@@ -9,16 +9,19 @@ class Events {
   // Handlers are called in the priority-order (lowest first), then insertion
   // order.
   static on(eventType, handler, owner, priority = 1) {
-    // Create a new map from owner to handlers if the eventType is new.
+    // Create a new priority queue from owner to handlers if the eventType is new.
     if (!(eventType in Events._events)) {
-      Events._events[eventType] = new Map();
+      Events._events[eventType] = new PriorityQueue();
     }
-    // Create a new handler list for a new owner.
-    if (!Events._events[eventType].has(owner)) {
-      Events._events[eventType].set(owner, []);
+    
+    const eventQueue = Events._events[eventType];
+    
+    // Create a new handler list for a new priority, owner.
+    if (!eventQueue.has(priority, owner)) {
+      eventQueue.push(priority, owner, []);
     }
     // Add the handler to the owner's handler list.
-    Events._events[eventType].get(owner).push(handler);
+    eventQueue.get(priority, owner).push(handler);
   }
 
   // Detach any handlers from event of type 'eventType' for 'owner'.
@@ -26,7 +29,7 @@ class Events {
     if (owner === null) {
       delete Events._events[eventType];
     } else {
-      Events._events[eventType].delete(owner);s
+      Events._events[eventType].removeKey(owner);
     }
   }
 
@@ -34,9 +37,11 @@ class Events {
   static dispatch(eventType, ...data) {
     if (!(eventType in Events._events)) return;
 
-    const ownerHandlersMap = Events._events[eventType];
-    let owner, handlers;
-    for ([owner, handlers] of ownerHandlersMap) {
+    const ownerHandlersPQ = Events._events[eventType];
+    // console.log(ownerHandlersPQ);
+    for (let keyValue of ownerHandlersPQ) {
+      const owner = keyValue.key;
+      const handlers = keyValue.value;
       for (let handler of handlers) {
         handler.call(owner, ...data);
       }

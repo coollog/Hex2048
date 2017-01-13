@@ -9,6 +9,7 @@ class Board {
     this._radius = radius;
     this._centerToEdge = this._radius * Math.sqrt(3) / 2;
     this.hexagons = [];
+    this._score = 0;
     for (let x = 0; x < this._numPerEdge * 2 - 1; x++) {
       this.hexagons.push(new Array(this._numPerEdge * 2 - 1));
     }
@@ -43,7 +44,7 @@ class Board {
         xy.y = xy.y + this._centerToEdge * 2;
       }
       
-      // Find x and y posiiton of the top most hexagon in next column
+      // Find x and y position of the top most hexagon in next column
       if (horiz < this._numPerEdge - 1) {
         xy.x = xy.x + this._radius * 1.5;
         xy.y = xy.y - this._centerToEdge * (vertNum * 2 + 1);
@@ -140,7 +141,11 @@ class Board {
             if (thisH.text == nextH.text) {
               // console.log("combine this and next");
               
-              curH.after = parseInt(thisH.text) * 2;
+              // Add to score if two blocks are combined
+              let doubled = parseInt(thisH.text) * 2;
+              this._score += doubled;
+              
+              curH.after = doubled;
               changed = changed || curH.before != curH.after;
               curIndex++;
               
@@ -200,9 +205,8 @@ class Board {
     };
   }
   
-  // Update board with the after values in result
+  // Update board with the after values in result.
   updateWithResult(result) {
-    console.log(result);
     for (let x = 0; x < this._numPerEdge * 2 - 1; x++) {
       for (let y = 0; y < this._numPerEdge * 2 - 1; y++) {
         if (typeof this.hexagons[x][y] !== 'undefined') {
@@ -210,6 +214,7 @@ class Board {
         }
       }
     }
+    return this;
   }
   
   // Find an empty block and put a 2 or 4 in it
@@ -227,6 +232,30 @@ class Board {
     }
   }
   
+  // Return the score
+  get score() {
+    return this._score;
+  }
+  
+  // Return true if player lost
+  lost() {
+    if (this._isFilled()) {
+      let cantMove = true;
+      
+      let result;
+      for (let dir = 0; dir < 6; dir++) {
+        result = this.collapse(dir);
+        
+        // If collapsing in a direction changes board, then it means can move
+        cantMove = cantMove && !result.changed
+      }
+      
+      return cantMove;
+    } else {
+      return false;
+    }
+  }
+  
   // Find center of the top left-most hexagon
   _findFirstXY() {
     let x = this._coord.x + this._radius;
@@ -235,7 +264,7 @@ class Board {
     return new Coordinate(x, y);
   }
   
-  // Draw all of the hexagon shapes and their text
+  // Draw all of the hexagon shapes and their text; draw score
   _drawAll() {
     for (let horiz = 0; horiz < this.hexagons.length; horiz++) {
       for (let vert = 0; vert < this.hexagons[horiz].length; vert++) {
@@ -246,6 +275,12 @@ class Board {
         }
       }
     }
+    
+    this._drawScore();
+  }
+  
+  _drawScore() {
+    this._canvas.drawText(new Coordinate(10, 15), this._score, 'left', '30px Arial');
   }
   
   // Define the iterator values (should only be called once in constructor)
@@ -319,5 +354,21 @@ class Board {
     // }
     
     return indices;
+  }
+  
+  // If all the hexagons are filled with numbers
+  _isFilled() {
+    let filled = true;
+    
+    for (let horiz = 0; horiz < this.hexagons.length; horiz++) {
+      for (let vert = 0; vert < this.hexagons[horiz].length; vert++) {
+        let hexagon = this.hexagons[horiz][vert];
+        if (hexagon != undefined) {
+          filled = filled && (hexagon.text != '');
+        }
+      }
+    }
+    
+    return filled;
   }
 }

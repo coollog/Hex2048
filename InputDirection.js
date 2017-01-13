@@ -1,4 +1,6 @@
-// DDO for an input direction.
+/**
+ * DDO for an input direction.
+ */
 class InputDirection {
   constructor(direction) {
     this._direction = direction;

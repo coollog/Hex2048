@@ -16,7 +16,7 @@ class GestureHandler {
     Events.on(InputHandler.EVENT_TYPES.DRAG, this._drag, this);
     Events.on(InputHandler.EVENT_TYPES.DRAG_END, this._dragEnd, this);
     
-    Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this);
+    Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this, 100);
   }
   
   _draw(imgRightArrow = ASSETS.RIGHT_ARROW) {
