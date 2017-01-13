@@ -1,5 +1,6 @@
 // import 'DrawTimer'
 // import 'InputDirection'
+// import 'HexagonAnimated'
 
 /**
  * Controls the state of the game.
@@ -12,6 +13,10 @@ class Controller {
     // Attach event handlers.
     Events.on(Controller.EVENT_TYPES.INPUT_DIRECTION, this._input, this);
     Events.on(DrawTimer.EVENT_TYPES.DRAW, this._step, this, 0);
+  }
+  
+  get board() {
+    return this._board;
   }
   
   set state(newState) {
@@ -43,6 +48,7 @@ Controller.EVENT_TYPES = {
  * Extend this class to implement new states.
  *  handleInput - handles an InputDirection.
  *  step - runs every draw step.
+ *  _controllerReady - runs when the state is attached to the Controller.
  */
 Controller.State = class {
   constructor(type, controller) {
@@ -56,6 +62,8 @@ Controller.State = class {
   
   set controller(controller) {
     this._controller = controller;
+    
+    this._controllerReady();
   }
   
   handleInput(direction) {
@@ -63,6 +71,10 @@ Controller.State = class {
   }
   
   step() {
+    // Do nothing by default.
+  }
+  
+  _controllerReady() {
     // Do nothing by default.
   }
 };
@@ -77,10 +89,11 @@ Controller.ReadyState = class extends Controller.State {
   
   handleInput(direction) {
     // Start animating the board toward the input direction.
-    let collapsed = this._controller._board.collapse(direction.direction);
+    let collapsed = this._controller.board.collapse(direction.direction);
+    console.log(collapsed);
     if (!collapsed.changed) return;
     
-    this._controller.state = new Controller.AnimatingState(collapsed);
+    this._controller.state = new Controller.AnimatingState(collapsed.result);
   }
 };
 
@@ -88,30 +101,93 @@ Controller.ReadyState = class extends Controller.State {
  * Represents the ANIMATING state.
  */
 Controller.AnimatingState = class extends Controller.State {
-  constructor(collapsed) {
+  constructor(collapsedResult) {
     super(Controller.STATES.ANIMATING);
     
-    this._collapsed = collapsed;
+    this._collapsedResult = collapsedResult;
     
-    this._createAnimatingHexagons();
+    // Time steps for animation.
+    this._animated = 0;
   }
   
   // Animates the board toward the collapsed result.
   step() {
-    this._controller._board
-        .updateWithResult(this._collapsed.result)
-        .addRandom();
-    this._controller.state = new Controller.ReadyState();
+    if (this._animated === Controller.AnimatingState.ANIMATE_MAX) {
+      this._finish();
+    } else {
+      this._animated ++;
+      this._updateAnimatingHexagons();
+    }
+  }
+  
+  _controllerReady() {
+    this._createAnimatingHexagons();
   }
   
   _createAnimatingHexagons() {
-    // for (let row of this._collapsed) {
-    //   for (let cell of this._collapsed) {
-    //     const [before, after] = cell;
-    //     if (before === undefined) continue;
-          
+    this._hexagons = [];
+    
+    for (let row = 0; row < this._collapsedResult.length; row ++) {
+      for (let col = 0; col < this._collapsedResult.length; col ++) {
+        const {before, after, change} = this._collapsedResult[row][col];
+        if (before === undefined) continue;
         
-    //   }
-    // }
+        // Stop any blinking.
+        this._controller.board.hexagons[row][col].endBlink();
+        
+        const [newRow, newCol] = change;
+        // Don't animate if original is blank.
+        if (before === '') continue;
+        
+        // Disable original's drawing if changed position.
+        if (row !== newRow || col !== newCol) {
+          this._controller.board.hexagons[row][col].disableDrawing();
+        }
+        
+        // If stay in same position, draw with lower priority.
+        const samePosition = row === newRow && col === newCol;
+        const zIndex = samePosition ? 10 : 11;
+        
+        const hexagon = new HexagonAnimated(
+            this._controller.board.canvas, 
+            this._controller.board.radius, 
+            this._controller.board.indexToXY(row, col), 
+            this._controller.board.indexToXY(newRow, newCol),
+            zIndex);
+        hexagon.text = this._collapsedResult[row][col].before;
+        this._hexagons.push(hexagon);
+      }
+    }
+  }
+  
+  _updateAnimatingHexagons() {
+    for (let hexagon of this._hexagons) {
+      hexagon.animate(this._animated / Controller.AnimatingState.ANIMATE_MAX);
+    }
+  }
+  
+  _finish() {
+    // Delete all animating hexagons.
+    for (let hexagon of this._hexagons) {
+      hexagon.delete();
+    }
+    this._hexagons = [];
+    
+    // Reenable drawing for all hexagons.
+    for (let row = 0; row < this._collapsedResult.length; row ++) {
+      for (let col = 0; col < this._collapsedResult.length; col ++) {
+        if (this._controller.board.hexagons[row][col] === undefined) continue;
+        this._controller.board.hexagons[row][col].enableDrawing();
+      }
+    }
+    
+    // Update board to be the result.
+    this._controller.board
+      .updateWithResult(this._collapsedResult)
+      .addRandom();
+    this._controller.state = new Controller.ReadyState();
   }
 };
+
+// Total time steps for animation.
+Controller.AnimatingState.ANIMATE_MAX = 20;

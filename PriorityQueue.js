@@ -262,37 +262,38 @@ PriorityQueue.KeyValue = class {
 };
 
 /**
- * Stores mapping from key to Node references.
+ * Stores mapping from key to Node ids.
  */
 PriorityQueue.KeyMap = class {
   constructor() {
-    this._keyMap = {};
+    this._keyMap = new Map();
   }
   
   // Adds 'nodeId' into the Set for 'key'.
   add(key, nodeId) {
-    if (!(key in this._keyMap)) {
-      this._keyMap[key] = new Set();
+    if (typeof key === 'undefined') console.log("?????");
+    if (!this._keyMap.has(key)) {
+      this._keyMap.set(key, new Set());
     }
-    this._keyMap[key].add(nodeId);
+    this._keyMap.get(key).add(nodeId);
   }
   
   // Get the Set of nodeIds for 'key'.
   get(key) {
-    return this._keyMap[key];
+    return this._keyMap.get(key);
   }
   
   // Delets the Set for 'key'.
   delete(key) {
-    delete this._keyMap[key];
+    this._keyMap.delete(key);
   }
   
   // Deletes the 'node' for 'key'. Returns successful or not.
   deleteNode(key, nodeId) {
-    if (key in this._keyMap) {
-      this._keyMap[key].delete(nodeId);
-      if (this._keyMap[key].size == 0) {
-        delete this._keyMap[key];
+    if (this._keyMap.has(key)) {
+      this._keyMap.get(key).delete(nodeId);
+      if (this._keyMap.get(key).size == 0) {
+        this.delete(key);
       }
     }
     
@@ -300,13 +301,13 @@ PriorityQueue.KeyMap = class {
   }
   
   has(key) {
-    return key in this._keyMap;
+    return this._keyMap.has(key);
   }
   
   clone() {
     const clone = new PriorityQueue.KeyMap();
-    for (let key in this._keyMap) {
-      clone._keyMap[key] = new Set(this._keyMap[key]);
+    for (let [key, nodeIds] of this._keyMap) {
+      clone._keyMap.set(key, new Set(nodeIds));
     }
     return clone;
   }

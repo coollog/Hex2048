@@ -69,6 +69,14 @@ class Canvas {
     this._context.globalAlpha = 1.0;
   }
   
+  drawWithShadow(size, color, drawFn) {
+    this._context.save();
+    this._context.shadowBlur = size;
+    this._context.shadowColor = color;
+    drawFn();
+    this._context.restore();
+  }
+  
   getMousePosition(e) {
     const canvasRect = this._canvas.getBoundingClientRect();
     const x =

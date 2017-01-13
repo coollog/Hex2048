@@ -38,6 +38,16 @@ class Coordinate {
   translate(other) {
     return new Coordinate(this._x + other.x, this._y + other.y);
   }
+  
+  // Returns copy subtracted by 'other'.
+  subtract(other) {
+    return new Coordinate(this._x - other.x, this._y - other.y);
+  }
+  
+  // Returns copy scaled by 'magnitude'.
+  scale(magnitude) {
+    return new Coordinate(this._x * magnitude, this._y * magnitude);
+  }
 
   toArray() {
     return [this._x, this._y];

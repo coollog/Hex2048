@@ -22,9 +22,24 @@ class Board {
     this._defineIters();
     
     // Bind drawAll to draw event
-    Events.on(DrawTimer.EVENT_TYPES.DRAW, this._drawAll.bind(this));
+    Events.on(DrawTimer.EVENT_TYPES.DRAW, this._drawAll, this);
   }
   
+  // Converts row,col indices to an XY coordinate.
+  indexToXY(row, col) {
+    // Put origin at center.
+    row = row - this._numPerEdge + 1;
+    col = col - this._numPerEdge + 1;
+    // Units of x and y.
+    const xUnits = col;
+    const yUnits = row + 0.5 * col;
+    // Scale the units.
+    const x = xUnits * this._radius * 1.5;
+    const y = yUnits * this._centerToEdge * 2;
+    
+    return this._center.translate(new Coordinate(x, y));
+  }
+
   // Create all of the hexagon shapes
   createAll() {
     for (let row = 0; row < this._width; row ++) {
@@ -32,9 +47,8 @@ class Board {
         // Create each hexagon.
         if (!this._isIndexInside(row, col)) continue;
         
-        const xy = this._indexToXY(row, col);
-        let hexagon = 
-            new Hexagon(this._canvas, this._center.translate(xy), this._radius);
+        const xy = this.indexToXY(row, col);
+        let hexagon = new Hexagon(this._canvas, xy, this._radius);
         hexagon.text = '';
         this.hexagons[row][col] = hexagon;
       }
@@ -56,20 +70,21 @@ class Board {
     let changed = false;
     
     // Create a result array (this will be returned)
-    let result = [];
+    let result = new Array(this._width);
     
-    for (let row = 0; row < this._width; row ++) {
-      let temp = []
-      for (let col = 0; col < this._width; col ++) {
-        let hexagon = this.hexagons[row][col];
+    for (let col = 0; col < this._width; col ++) {
+      result[col] = new Array(this._width);
+      
+      for (let row = 0; row < this._width; row ++) {
+        let hexagon = this.hexagons[col][row];
         
         // Add in the before values; undefined if hexagon does not exist
-        temp.push({
+        result[col][row] = {
           before: (typeof hexagon !== 'undefined') ? hexagon.text : undefined,
-          after: (typeof hexagon !== 'undefined') ? '' : undefined
-        })
+          after: (typeof hexagon !== 'undefined') ? '' : undefined,
+          change: [col, row]
+        };
       }
-      result.push(temp);
     }
     
     // Find the first hexagon for each line (note first here means the one furthest
@@ -78,6 +93,21 @@ class Board {
     
     // Iterate through each line and combine/compress as needed
     for (let line = 0; line < this._width; line++) {
+      // Helper func: Update curH value and perform other needed actions
+      // Note that result.change at iIndex and jIndex (optional) will be updated with
+      //    where the hexagon WILL move to
+      function updateCurH(newValue, iIndex, jIndex) {
+        curH.after = newValue;
+        changed = changed || curH.before != curH.after;
+        
+        result[iIndex.x][iIndex.y].change = [indicesInLine[curIndex].x, indicesInLine[curIndex].y];
+        if (typeof jIndex !== 'undefined') {
+          result[jIndex.x][jIndex.y].change = [indicesInLine[curIndex].x, indicesInLine[curIndex].y];
+        }
+        
+        curIndex++;
+      }
+
       // Create a list of indices of the hexagons in the line
       let indicesInLine = [starters[line]];
       for (let i = 1; i < this._width; i++) {
@@ -86,8 +116,8 @@ class Board {
         // All hexagons have been considered in this line so break out of loop
         if (typeof temp === 'undefined') break;
         
-        let x = indicesInLine[i - 1].x + this._iters[dir].line.x;
-        let y = indicesInLine[i - 1].y + this._iters[dir].line.y;
+        let x = indicesInLine[i - 1].x + this._iters[dir].line.col;
+        let y = indicesInLine[i - 1].y + this._iters[dir].line.row;
         
         // Check if this is a valid hexagon
         if (x < this._width && y < this._width &&
@@ -132,10 +162,8 @@ class Board {
               let doubled = parseInt(thisH.text) * 2;
               this._score += doubled;
               
-              curH.after = doubled;
-              changed = changed || curH.before != curH.after;
-              curIndex++;
-              
+              updateCurH(doubled, indicesInLine[i], indicesInLine[j]);
+
               // Move i to be the next j (since j and i have already combined)
               j++;
               i = j;
@@ -164,12 +192,10 @@ class Board {
       if (i < indicesInLine.length) {
         thisH = this.hexagons[indicesInLine[i].x][indicesInLine[i].y];
         if (thisH.text != '') {
-          curH.after = thisH.text;
-          changed = changed || curH.before != curH.after;
+          updateCurH(thisH.text, indicesInLine[i]);
           if (i == indicesInLine.length - 1) {
             continue;
           } else {
-            curIndex++;
             curH = result[indicesInLine[curIndex].x][indicesInLine[curIndex].y];
           }
         }
@@ -180,8 +206,7 @@ class Board {
       if (j < indicesInLine.length) {
         nextH = this.hexagons[indicesInLine[j].x][indicesInLine[j].y];
         if (nextH.text != '') {
-          curH.after = nextH.text;
-          changed = changed || curH.before != curH.after;
+          updateCurH(nextH.text, indicesInLine[j]);
         }
       }
     }
@@ -193,11 +218,20 @@ class Board {
   }
   
   // Update board with the after values in result.
-  updateWithResult(result) {
-    for (let x = 0; x < this._width; x++) {
-      for (let y = 0; y < this._width; y++) {
-        if (typeof this.hexagons[x][y] !== 'undefined') {
-          this.hexagons[x][y].text = result[x][y].after;
+  updateWithResult(results) {
+    for (let col = 0; col < this._width; col++) {
+      for (let row = 0; row < this._width; row++) {
+        const hexagon = this.hexagons[col][row];
+        if (typeof hexagon === 'undefined') continue;
+        
+        const {before, after, change} = results[col][row];
+        const [newRow, newCol] = change;
+        
+        hexagon.text = after;
+        
+        // If changed value and not to blank, then blink!
+        if (after !== before && after !== '') {
+          hexagon.startBlink();
         }
       }
     }
@@ -206,19 +240,26 @@ class Board {
   
   // Find an empty block and put a 2 or 4 in it
   addRandom() {
-    let added = true;
-    while (added) {
+    while (true) {
       let x = Math.floor(Math.random() * (this._width));
       let y = Math.floor(Math.random() * (this._width));
       
       let hexagon = this.hexagons[x][y];
       if (typeof hexagon !== 'undefined' && hexagon.text == '') {
-        added = false;
-        hexagon.text = (Math.floor(Math.random() * 2)) ? '2' : '4'; 
+        hexagon.text = Math.random() < 0.5 ? '2' : '4'; 
+        break;
       }
     }
   }
   
+  get canvas() {
+    return this._canvas;
+  }
+  
+  get radius() {
+    return this._radius;
+  }
+
   // Return the score
   get score() {
     return this._score;
@@ -265,45 +306,45 @@ class Board {
   // Define the iterator values (should only be called once in constructor)
   _defineIters() {
     let ITER_TOP_RIGHT = {
-      start:  {x: 0,                          y: this._numPerEdge - 1},
-      first:  {x: 0,                          y: 1},
-      second: {x: 1,                          y: 0},
-      line:   {x: 1,                          y: -1}
+      start:  {col: 0,                          row: this._numPerEdge - 1},
+      first:  {col: 0,                          row: 1},
+      second: {col: 1,                          row: 0},
+      line:   {col: 1,                          row: -1}
     }
     
     let ITER_UP = {
-      start:  {x: this._numPerEdge - 1,       y: 0},
-      first:  {x: -1,                         y: 1},
-      second: {x: 0,                          y: 1},
-      line:   {x: 1,                          y: 0}
+      start:  {col: this._numPerEdge - 1,       row: 0},
+      first:  {col: -1,                         row: 1},
+      second: {col: 0,                          row: 1},
+      line:   {col: 1,                          row: 0}
     }
     
     let ITER_TOP_LEFT = {
-      start:  {x: (this._numPerEdge - 1) * 2, y: 0},
-      first:  {x: -1,                         y: 0},
-      second: {x: -1,                         y: 1},
-      line:   {x: 0,                          y: 1}
+      start:  {col: (this._numPerEdge - 1) * 2, row: 0},
+      first:  {col: -1,                         row: 0},
+      second: {col: -1,                         row: 1},
+      line:   {col: 0,                          row: 1}
     }
     
     let ITER_BOTTOM_LEFT = {
-      start:  {x: this._numPerEdge - 1,       y: 0},
-      first:  {x: 1,                          y: 0},
-      second: {x: 0,                          y: 1},
-      line:   {x: -1,                         y: 1}
+      start:  {col: this._numPerEdge - 1,       row: 0},
+      first:  {col: 1,                          row: 0},
+      second: {col: 0,                          row: 1},
+      line:   {col: -1,                         row: 1}
     }
     
     let ITER_DOWN = {
-      start:  {x: (this._numPerEdge - 1) * 2, y: 0},
-      first:  {x: 0,                          y: 1},
-      second: {x: -1,                         y: 1},
-      line:   {x: -1,                         y: 0}
+      start:  {col: (this._numPerEdge - 1) * 2, row: 0},
+      first:  {col: 0,                          row: 1},
+      second: {col: -1,                         row: 1},
+      line:   {col: -1,                         row: 0}
     }
     
     let ITER_BOTTOM_RIGHT = {
-      start:  {x: (this._numPerEdge - 1) * 2, y: this._numPerEdge - 1},
-      first:  {x: -1,                         y: 1},
-      second: {x: -1,                         y: 0},
-      line:   {x: 0,                          y: -1}
+      start:  {col: (this._numPerEdge - 1) * 2, row: this._numPerEdge - 1},
+      first:  {col: -1,                         row: 1},
+      second: {col: -1,                         row: 0},
+      line:   {col: 0,                          row: -1}
     }
     
     this._iters = [ITER_TOP_RIGHT, ITER_UP, ITER_TOP_LEFT, 
@@ -317,14 +358,14 @@ class Board {
     let indices = [];
     
     indices.push({
-      x: iter.start.x,
-      y: iter.start.y
+      x: iter.start.col,
+      y: iter.start.row
     });
     
     for (let i = 1; i < this._width; i++) {
       indices.push({
-        x: indices[i - 1].x + ((i < this._numPerEdge) ? iter.first.x : iter.second.x),
-        y: indices[i - 1].y + ((i < this._numPerEdge) ? iter.first.y : iter.second.y)
+        x: indices[i - 1].x + ((i < this._numPerEdge) ? iter.first.col : iter.second.col),
+        y: indices[i - 1].y + ((i < this._numPerEdge) ? iter.first.row : iter.second.row)
       })
     }
     
@@ -366,20 +407,5 @@ class Board {
   _verticalLength(col) {
     const half = this._numPerEdge - 1;
     return 2 * half - Math.abs(half - col) + 1;
-  }
-  
-  // Converts row,col indices to a relative XY coordinate.
-  _indexToXY(row, col) {
-    // Put origin at center.
-    row = row - this._numPerEdge + 1;
-    col = col - this._numPerEdge + 1;
-    // Units of x and y.
-    const xUnits = col;
-    const yUnits = row + 0.5 * col;
-    // Scale the units.
-    const x = xUnits * this._radius * 1.5;
-    const y = yUnits * this._centerToEdge * 2;
-    
-    return new Coordinate(x, y);
   }
 }
