@@ -18,6 +18,7 @@ class Board {
     // Create iterators
     this._defineIters();
     
+    // Bind drawAll to draw event
     Events.on(DrawTimer.EVENT_TYPES.DRAW, this._drawAll.bind(this));
   }
   
@@ -30,15 +31,19 @@ class Board {
     
     let xIndex = this._numPerEdge - 1;
 
+    // Go each column
     for (let horiz = 0; horiz < this._numPerEdge * 2 - 1; horiz++) {
+      // Create each hexagon in the column
       for (let vert = 0; vert < vertNum; vert++) {
         let hexagon = new Hexagon(this._canvas, new Coordinate(xy.x, xy.y), this._radius);
         hexagon.text = '';
         this.hexagons[xIndex + vert][horiz] = hexagon;
         
+        // Update the y position to create next hexagon in column
         xy.y = xy.y + this._centerToEdge * 2;
       }
       
+      // Find x and y posiiton of the top most hexagon in next column
       if (horiz < this._numPerEdge - 1) {
         xy.x = xy.x + this._radius * 1.5;
         xy.y = xy.y - this._centerToEdge * (vertNum * 2 + 1);
@@ -69,6 +74,8 @@ class Board {
       let temp = []
       for (let y = 0; y < this._numPerEdge * 2 - 1; y++) {
         let hexagon = this.hexagons[x][y];
+        
+        // Add in the before values; undefined if hexagon does not exist
         temp.push({
           before: (typeof hexagon !== 'undefined') ? hexagon.text : undefined,
           after: (typeof hexagon !== 'undefined') ? '' : undefined
@@ -88,12 +95,13 @@ class Board {
       for (let i = 1; i < this._numPerEdge * 2 - 1; i++) {
         let temp = indicesInLine[i - 1];
         
-        // This line is already complete so break
+        // All hexagons have been considered in this line so break out of loop
         if (typeof temp === 'undefined') break;
         
         let x = indicesInLine[i - 1].x + this._iters[dir].line.x;
         let y = indicesInLine[i - 1].y + this._iters[dir].line.y;
         
+        // Check if this is a valid hexagon
         if (x < this._numPerEdge * 2 - 1 && y < this._numPerEdge * 2 - 1 &&
             x >= 0 && y >= 0) {
           let hexagon = this.hexagons[x][y];
@@ -101,6 +109,8 @@ class Board {
             indicesInLine.push({x: x, y: y});
           }
         } else {
+          // If a hexagon is not valid, then all others following same order will
+          // also be invalid
           break;
         }
       }
@@ -129,15 +139,18 @@ class Board {
           } else {
             if (thisH.text == nextH.text) {
               // console.log("combine this and next");
+              
               curH.after = parseInt(thisH.text) * 2;
               changed = changed || curH.before != curH.after;
               curIndex++;
               
+              // Move i to be the next j (since j and i have already combined)
               j++;
               i = j;
               j++;
             } else {
               // console.log("don't combine this and next");
+              
               curH.after = thisH.text;
               changed = changed || curH.before != curH.after;
               curIndex++;
@@ -154,7 +167,8 @@ class Board {
       // Update curH because curIndex might have been updated
       curH = result[indicesInLine[curIndex].x][indicesInLine[curIndex].y];
       
-      // Check if there needs to be some copying at the end of the line
+      // Check if there is a value at the end of the line that needs to be copied
+      // into curH (thisH location)
       if (i < indicesInLine.length) {
         thisH = this.hexagons[indicesInLine[i].x][indicesInLine[i].y];
         if (thisH.text != '') {
@@ -169,7 +183,8 @@ class Board {
         }
       }
       
-      // Check if there needs to be some copying at the end of the line
+      // Check if there is a value at the end of the line that needs to be copied
+      // into curH (nextH location)
       if (j < indicesInLine.length) {
         nextH = this.hexagons[indicesInLine[j].x][indicesInLine[j].y];
         if (nextH.text != '') {
@@ -187,6 +202,7 @@ class Board {
   
   // Update board with the after values in result
   updateWithResult(result) {
+    console.log(result);
     for (let x = 0; x < this._numPerEdge * 2 - 1; x++) {
       for (let y = 0; y < this._numPerEdge * 2 - 1; y++) {
         if (typeof this.hexagons[x][y] !== 'undefined') {

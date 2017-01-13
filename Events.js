@@ -1,10 +1,14 @@
+// import 'PriorityQueue'
+
 /**
  * An event dispatcher that redirects events with data.
  */
 class Events {
   // Attach 'handler' to be called when event of type 'eventType' is received.
   // The handler is cslled with this as 'owner'.
-  static on(eventType, handler, owner) {
+  // Handlers are called in the priority-order (lowest first), then insertion
+  // order.
+  static on(eventType, handler, owner, priority = 1) {
     // Create a new map from owner to handlers if the eventType is new.
     if (!(eventType in Events._events)) {
       Events._events[eventType] = new Map();

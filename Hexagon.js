@@ -44,11 +44,8 @@ class Hexagon {
     } else {
       let num = Math.log2(text);
       if (num % 1 === 0) {
-        if (num < COLORS.length) {
-          this._color = COLORS[num];
-        } else {
-          this._color = COLORS[COLORS.length - 1];
-        }
+        num = Math.min(num, COLORS.length - 1);
+        this._color = COLORS[num];
       } else {
         this._color = COLORS[0];
       } 

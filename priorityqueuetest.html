@@ -1,0 +1,27 @@
+<script src="PriorityQueue.js"></script>
+
+<script>
+  const q = new PriorityQueue();
+  q.push(5, 'key1', 'v5');
+  q.push(1, 'key1', 'v2');
+  q.push(0, 'key1', 'v1');
+  q.push(3, 'key1', 'v4');
+  q.push(6, 'key1', 'v6');
+  q.push(2, 'key1', 'v3');
+  q.push(0, 'key2', 'v1');
+  q.push(0, 'key3', 'v1');
+  q.push(2, 'key2', 'v2');
+  
+  for (let data of q) {
+    console.log(data);
+  }
+  console.log('aasdf');
+  for (let data of q) {
+    console.log(data);
+  }
+  console.log('aasdf');
+  q.removeKey('key1');
+  for (let data of q) {
+    console.log(data);
+  }
+</script>

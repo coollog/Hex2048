@@ -51,7 +51,6 @@ class GestureHandler {
   _dragEnd(mousePosition) {
     this._dragging = false;
     this._dragCurrentCoord = mousePosition;
-    
     if (this._updateGesture()) {
       Events.dispatch(Controller.EVENT_TYPES.INPUT_DIRECTION, 
           new InputDirection(this._gesture));
@@ -83,6 +82,8 @@ class GestureHandler {
     const angleIndex = Math.floor(normalizedAngle / (Math.PI / 3));
     
     this._gesture = angleIndex;
+    
+    return true;
   }
 }
 

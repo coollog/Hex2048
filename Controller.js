@@ -2,7 +2,8 @@
  * Controls the state of the game.
  */
 class Controller {
-  constructor() {
+  constructor(board) {
+    this._board = board;
     this._state = Controller.STATES.READY;
     
     // Attach event handlers.
@@ -15,6 +16,11 @@ class Controller {
     if (this._state !== Controller.STATES.READY) return;
     
     // Start animating the board toward the input direction.
+    let collapsed = this._board.collapse(direction.direction);
+    if (collapsed.changed) {
+      this._board.updateWithResult(collapsed.result);
+      board.addRandom();
+    }
   }
 };
 

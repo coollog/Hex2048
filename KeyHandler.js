@@ -25,5 +25,5 @@ KeyHandler.KEY_TO_DIRECTION_MAP = {
   E: InputDirection.DIRECTIONS.TOP_RIGHT,
   D: InputDirection.DIRECTIONS.BOTTOM_RIGHT,
   S: InputDirection.DIRECTIONS.DOWN,
-  A: InputDirection.DIRECTIONS.BOTTOM_LEFT
+  A: InputDirection.DIRECTIONS.BOTTOM_LEFTs
 };
