@@ -2,16 +2,18 @@
 // import 'Hexagon'
 
 class Board {
-  constructor(canvas, coord, numPerEdge, radius) {
+  constructor(canvas, center, numPerEdge, radius) {
     this._canvas = canvas;
-    this._coord = coord;
+    this._center = center;
     this._numPerEdge = numPerEdge;
     this._radius = radius;
     this._centerToEdge = this._radius * Math.sqrt(3) / 2;
-    this.hexagons = [];
+    this._width = this._numPerEdge * 2 - 1;
     this._score = 0;
-    for (let x = 0; x < this._numPerEdge * 2 - 1; x++) {
-      this.hexagons.push(new Array(this._numPerEdge * 2 - 1));
+    
+    this.hexagons = [];
+    for (let x = 0; x < this._width; x++) {
+      this.hexagons.push(new Array(this._width));
     }
     
     this.startingIndices = [];
@@ -25,37 +27,17 @@ class Board {
   
   // Create all of the hexagon shapes
   createAll() {
-    let xy = this._findFirstXY();
-    
-    // Number of hexagons in this vertical line
-    let vertNum = this._numPerEdge;
-    
-    let xIndex = this._numPerEdge - 1;
-
-    // Go each column
-    for (let horiz = 0; horiz < this._numPerEdge * 2 - 1; horiz++) {
-      // Create each hexagon in the column
-      for (let vert = 0; vert < vertNum; vert++) {
-        let hexagon = new Hexagon(this._canvas, new Coordinate(xy.x, xy.y), this._radius);
-        hexagon.text = '';
-        this.hexagons[xIndex + vert][horiz] = hexagon;
+    for (let row = 0; row < this._width; row ++) {
+      for (let col = 0; col < this._width; col ++) {
+        // Create each hexagon.
+        if (!this._isIndexInside(row, col)) continue;
         
-        // Update the y position to create next hexagon in column
-        xy.y = xy.y + this._centerToEdge * 2;
+        const xy = this._indexToXY(row, col);
+        let hexagon = 
+            new Hexagon(this._canvas, this._center.translate(xy), this._radius);
+        hexagon.text = '';
+        this.hexagons[row][col] = hexagon;
       }
-      
-      // Find x and y position of the top most hexagon in next column
-      if (horiz < this._numPerEdge - 1) {
-        xy.x = xy.x + this._radius * 1.5;
-        xy.y = xy.y - this._centerToEdge * (vertNum * 2 + 1);
-        vertNum++;
-      } else {
-        vertNum--;
-        xy.x = xy.x + this._radius * 1.5;
-        xy.y = xy.y - this._centerToEdge * (vertNum * 2 + 1);
-      }
-      
-      xIndex = Math.max(xIndex - 1, 0);
     }
   }
   
@@ -64,6 +46,11 @@ class Board {
   // - result: a 2d array of:
   //    {before: the value in this hexagon before collapse,
   //     after:  the value in this hexagon after collapse}
+  // TODO: Change to:
+  // - result: a 2d array of:
+  //    {before: the value in this hexagon before collapse,
+  //     after:  the value in this hexagon after collapse,
+  //     change: the (row,col) this hexagon moved to}
   collapse(dir) {
     // This will state whether or not a hexagon was changed
     let changed = false;
@@ -71,16 +58,16 @@ class Board {
     // Create a result array (this will be returned)
     let result = [];
     
-    for (let x = 0; x < this._numPerEdge * 2 - 1; x++) {
+    for (let row = 0; row < this._width; row ++) {
       let temp = []
-      for (let y = 0; y < this._numPerEdge * 2 - 1; y++) {
-        let hexagon = this.hexagons[x][y];
+      for (let col = 0; col < this._width; col ++) {
+        let hexagon = this.hexagons[row][col];
         
         // Add in the before values; undefined if hexagon does not exist
         temp.push({
           before: (typeof hexagon !== 'undefined') ? hexagon.text : undefined,
           after: (typeof hexagon !== 'undefined') ? '' : undefined
-        })      
+        })
       }
       result.push(temp);
     }
@@ -90,10 +77,10 @@ class Board {
     let starters = this._findStartingIndices(dir);
     
     // Iterate through each line and combine/compress as needed
-    for (let line = 0; line < this._numPerEdge * 2 - 1; line++) {
+    for (let line = 0; line < this._width; line++) {
       // Create a list of indices of the hexagons in the line
       let indicesInLine = [starters[line]];
-      for (let i = 1; i < this._numPerEdge * 2 - 1; i++) {
+      for (let i = 1; i < this._width; i++) {
         let temp = indicesInLine[i - 1];
         
         // All hexagons have been considered in this line so break out of loop
@@ -103,7 +90,7 @@ class Board {
         let y = indicesInLine[i - 1].y + this._iters[dir].line.y;
         
         // Check if this is a valid hexagon
-        if (x < this._numPerEdge * 2 - 1 && y < this._numPerEdge * 2 - 1 &&
+        if (x < this._width && y < this._width &&
             x >= 0 && y >= 0) {
           let hexagon = this.hexagons[x][y];
           if (typeof hexagon !== 'undefined') {
@@ -207,8 +194,8 @@ class Board {
   
   // Update board with the after values in result.
   updateWithResult(result) {
-    for (let x = 0; x < this._numPerEdge * 2 - 1; x++) {
-      for (let y = 0; y < this._numPerEdge * 2 - 1; y++) {
+    for (let x = 0; x < this._width; x++) {
+      for (let y = 0; y < this._width; y++) {
         if (typeof this.hexagons[x][y] !== 'undefined') {
           this.hexagons[x][y].text = result[x][y].after;
         }
@@ -221,8 +208,8 @@ class Board {
   addRandom() {
     let added = true;
     while (added) {
-      let x = Math.floor(Math.random() * (this._numPerEdge * 2 - 1));
-      let y = Math.floor(Math.random() * (this._numPerEdge * 2 - 1));
+      let x = Math.floor(Math.random() * (this._width));
+      let y = Math.floor(Math.random() * (this._width));
       
       let hexagon = this.hexagons[x][y];
       if (typeof hexagon !== 'undefined' && hexagon.text == '') {
@@ -254,14 +241,6 @@ class Board {
     } else {
       return false;
     }
-  }
-  
-  // Find center of the top left-most hexagon
-  _findFirstXY() {
-    let x = this._coord.x + this._radius;
-    let y = this._coord.y + this._centerToEdge * this._numPerEdge;
-    
-    return new Coordinate(x, y);
   }
   
   // Draw all of the hexagon shapes and their text; draw score
@@ -342,14 +321,14 @@ class Board {
       y: iter.start.y
     });
     
-    for (let i = 1; i < this._numPerEdge * 2 - 1; i++) {
+    for (let i = 1; i < this._width; i++) {
       indices.push({
         x: indices[i - 1].x + ((i < this._numPerEdge) ? iter.first.x : iter.second.x),
         y: indices[i - 1].y + ((i < this._numPerEdge) ? iter.first.y : iter.second.y)
       })
     }
     
-    // for (let i = 0; i < this._numPerEdge * 2 - 1; i++) {
+    // for (let i = 0; i < this._width; i++) {
     //   console.log(indices[i].x + "," + indices[i].y);
     // }
     
@@ -370,5 +349,37 @@ class Board {
     }
     
     return filled;
+  }
+  
+  
+  // Returns true if (row, col) is a valid hexagon position.
+  _isIndexInside(row, col) {
+    const half = this._numPerEdge - 1;
+    const colStart = 0;
+    const colEnd = this._width;
+    const rowStart = Math.max(0, half - col);
+    const rowEnd = rowStart + this._verticalLength(col);
+    return row >= rowStart && row < rowEnd && col >= colStart && col < colEnd;
+  }
+  
+  // Calculates the number of hexagons in the column 'col'.
+  _verticalLength(col) {
+    const half = this._numPerEdge - 1;
+    return 2 * half - Math.abs(half - col) + 1;
+  }
+  
+  // Converts row,col indices to a relative XY coordinate.
+  _indexToXY(row, col) {
+    // Put origin at center.
+    row = row - this._numPerEdge + 1;
+    col = col - this._numPerEdge + 1;
+    // Units of x and y.
+    const xUnits = col;
+    const yUnits = row + 0.5 * col;
+    // Scale the units.
+    const x = xUnits * this._radius * 1.5;
+    const y = yUnits * this._centerToEdge * 2;
+    
+    return new Coordinate(x, y);
   }
 }

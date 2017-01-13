@@ -33,6 +33,11 @@ class Coordinate {
     const xDiff = other.x - this._x;
     return (Math.atan2(yDiff, xDiff) + 2 * Math.PI) % (2 * Math.PI);
   }
+  
+  // Returns copy translated by 'other'.
+  translate(other) {
+    return new Coordinate(this._x + other.x, this._y + other.y);
+  }
 
   toArray() {
     return [this._x, this._y];

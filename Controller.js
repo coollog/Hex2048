@@ -40,6 +40,9 @@ Controller.EVENT_TYPES = {
 
 /**
  * Represents a state of the Controller.
+ * Extend this class to implement new states.
+ *  handleInput - handles an InputDirection.
+ *  step - runs every draw step.
  */
 Controller.State = class {
   constructor(type, controller) {
@@ -89,6 +92,8 @@ Controller.AnimatingState = class extends Controller.State {
     super(Controller.STATES.ANIMATING);
     
     this._collapsed = collapsed;
+    
+    this._createAnimatingHexagons();
   }
   
   // Animates the board toward the collapsed result.
@@ -98,4 +103,15 @@ Controller.AnimatingState = class extends Controller.State {
         .addRandom();
     this._controller.state = new Controller.ReadyState();
   }
-}
+  
+  _createAnimatingHexagons() {
+    // for (let row of this._collapsed) {
+    //   for (let cell of this._collapsed) {
+    //     const [before, after] = cell;
+    //     if (before === undefined) continue;
+          
+        
+    //   }
+    // }
+  }
+};
