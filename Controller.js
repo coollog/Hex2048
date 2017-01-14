@@ -7,8 +7,7 @@
  */
 class Controller {
   constructor(board) {
-    this._board = board;
-    this.state = new Controller.ReadyState();
+    this.state = new Controller.StartingState();
     
     // Attach event handlers.
     Events.on(Controller.EVENT_TYPES.INPUT_DIRECTION, this._input, this);
@@ -18,10 +17,13 @@ class Controller {
   get board() {
     return this._board;
   }
+  set board(board) {
+    this._board = board;
+  }
   
   set state(newState) {
-    newState.controller = this;
     this._state = newState;
+    newState.controller = this;
   }
   
   // Handles an input direction.
@@ -35,8 +37,9 @@ class Controller {
 };
 
 Controller.STATES = {
-  READY: 0,
-  ANIMATING: 1, // When the tiles are animating.
+  STARTING: 0,
+  READY: 1,
+  ANIMATING: 2, // When the tiles are animating.
 };
 
 Controller.EVENT_TYPES = {
@@ -80,6 +83,30 @@ Controller.State = class {
 };
 
 /**
+ * Represents the STARTING state.
+ */
+Controller.StartingState = class extends Controller.State {
+  constructor() {
+    super(Controller.STATES.STARTING);
+  }
+  
+  _controllerReady() {
+    const board = new Board(canvas, new Coordinate(340, 340), 4, 50);
+    // Start drawing the board
+    board.createAll();
+    
+    // Generate a new board
+    for (let i = 0; i < 30; i ++) {
+      board.addRandom();
+    }
+    
+    this._controller.board = board;
+    
+    this._controller.state = new Controller.ReadyState();
+  }
+}
+
+/**
  * Represents the READY state.
  */
 Controller.ReadyState = class extends Controller.State {
@@ -90,7 +117,7 @@ Controller.ReadyState = class extends Controller.State {
   handleInput(direction) {
     // Start animating the board toward the input direction.
     let collapsed = this._controller.board.collapse(direction.direction);
-    console.log(collapsed);
+    
     if (!collapsed.changed) return;
     
     this._controller.state = new Controller.AnimatingState(collapsed.result);
@@ -150,7 +177,7 @@ Controller.AnimatingState = class extends Controller.State {
         
         const hexagon = new HexagonAnimated(
             this._controller.board.canvas, 
-            this._controller.board.radius, 
+            this._controller.board.radius - Hexagon.SPACING, 
             this._controller.board.indexToXY(row, col), 
             this._controller.board.indexToXY(newRow, newCol),
             zIndex);

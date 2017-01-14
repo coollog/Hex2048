@@ -1,5 +1,6 @@
 // import 'Coordinate'
 // import 'Hexagon'
+// import 'HexagonBackground'
 
 class Board {
   constructor(canvas, center, numPerEdge, radius) {
@@ -48,9 +49,13 @@ class Board {
         if (!this._isIndexInside(row, col)) continue;
         
         const xy = this.indexToXY(row, col);
-        let hexagon = new Hexagon(this._canvas, xy, this._radius);
+        let hexagon = 
+            new Hexagon(this._canvas, xy, this._radius - Hexagon.SPACING);
         hexagon.text = '';
         this.hexagons[row][col] = hexagon;
+        
+        // Create background hexagon.
+        new HexagonBackground(this._canvas, xy, this._radius + Hexagon.SPACING);
       }
     }
   }
@@ -286,16 +291,6 @@ class Board {
   
   // Draw all of the hexagon shapes and their text; draw score
   _drawAll() {
-    for (let horiz = 0; horiz < this.hexagons.length; horiz++) {
-      for (let vert = 0; vert < this.hexagons[horiz].length; vert++) {
-        let hexagon = this.hexagons[horiz][vert];
-        if (hexagon != undefined) {
-          hexagon.drawShape();
-          hexagon.drawText();
-        }
-      }
-    }
-    
     this._drawScore();
   }
   
@@ -408,4 +403,4 @@ class Board {
     const half = this._numPerEdge - 1;
     return 2 * half - Math.abs(half - col) + 1;
   }
-}
+};

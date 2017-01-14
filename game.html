@@ -8,15 +8,17 @@
   }
 </style>
 
-<canvas id="game" width="800" height="600" tabindex="1"></canvas>
+<canvas id="game" width="720" height="680" tabindex="1"></canvas>
 
 <assets>
   <img id="img-right-arrow" src="assets/right_arrow.png" />
 </assets>
 
 <script src="Coordinate.js"></script>
+<script src="Easing.js"></script>
 <script src="Hexagon.js"></script>
 <script src="HexagonAnimated.js"></script>
+<script src="HexagonBackground.js"></script>
 <script src="PriorityQueue.js"></script>
 <script src="Events.js"></script>
 <script src="Canvas.js"></script>
@@ -40,46 +42,8 @@
   const keyHandler = new KeyHandler(canvas);
   const gestureHandler = new GestureHandler(canvas);
   
-  const board = new Board(canvas, new Coordinate(300, 300), 5, 30);
-  const controller = new Controller(board);
+  const controller = new Controller();
   
   const drawTimer = new DrawTimer(canvas, FPS);
   drawTimer.start();
-  
-  // Start drawing the board
-  board.createAll();
-  
-  // Generate a new board
-  for (let i = 0; i < 30; i ++) {
-    board.addRandom();
-  }
-  
-  // // Collapse
-  // let wrappedResult;
-  
-  // let i = 0;
-  // function swipe() {
-  //   if (i < 15) {
-  //     console.log(wrappedResult.changed);
-  //     board.updateWithResult(wrappedResult.result);
-  //     dir = Math.floor(Math.random() * 6);
-  //     wrappedResult = board.collapse(dir);
-      
-  //     i++;
-      
-  //     setTimeout(swipe, 1000);
-  //   }
-    
-  //   return;
-  // };
-  
-  // let dir = Math.floor(Math.random() * 6);
-  // wrappedResult = board.collapse(dir);
-  // setTimeout(swipe, 1000);
-  
-  // // Create a new board to show results
-  // const collapsed = new Board(canvas, new Coordinate(50, 500), 5, 30);
-  // collapsed.createAll();
-  // collapsed.updateWithResult(wrappedResult.result);  // This is just for debugging
-  
 </script>

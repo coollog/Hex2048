@@ -39,7 +39,6 @@ class Canvas {
     this._context.closePath();
     this._context.fillStyle = color;
     this._context.fill();
-    this._context.stroke();
   }
   
   // Draw text centered at coord

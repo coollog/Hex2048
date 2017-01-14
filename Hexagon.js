@@ -1,4 +1,5 @@
 // import 'Coordinate'
+// import 'Easing'
 
 class Hexagon {
   // Create a hexagon centered at center and with radius (center to vertex) radius
@@ -12,6 +13,8 @@ class Hexagon {
     this._blinking = false;
     
     this._shouldDraw = true;
+    
+    Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this);
   }
   
   startBlink() {
@@ -26,42 +29,6 @@ class Hexagon {
   }
   disableDrawing() {
     this._shouldDraw = false;
-  }
-
-  // Draw the actual hexagon shape
-  drawShape() {
-    let coords = [];
-    
-    for (let i = 0; i < 6; i ++) {
-      const startAngle = i * Math.PI / 3;
-      const endAngle = (i + 1) * Math.PI / 3;
-
-      const startCoord = new Coordinate(
-          this._center.x + Math.cos(startAngle) * this._radius,
-          this._center.y + Math.sin(startAngle) * this._radius);
-      const endCoord = new Coordinate(
-          this._center.x + Math.cos(endAngle) * this._radius,
-          this._center.y + Math.sin(endAngle) * this._radius);
-
-      coords.push(startCoord);
-    }
-    
-    this._updateBlinking();
-    if (this._blinking) {
-      const blinkHalf = Hexagon.BLINK_MAX / 2;
-      const blinkScale = 1 - Math.abs(blinkHalf - this._blinking) / blinkHalf;
-      const blinkSize = Hexagon.BLINK_SHADOW_SIZE * blinkScale;
-      this._canvas.drawWithShadow(
-          blinkSize, Hexagon.BLINK_SHADOW_COLOR, 
-          this._drawWithCoords.bind(this, coords));
-    }
-    else if (this._highlight !== false) {
-      this._canvas.drawWithShadow(
-          this._highlight * Hexagon.HIGHLIGHT_SIZE, Hexagon.HIGHLIGHT_COLOR, 
-          this._drawWithCoords.bind(this, coords));
-    } else {
-      this._drawWithCoords(coords);
-    }
   }
   
   // Get the text of the hexagon
@@ -81,12 +48,61 @@ class Hexagon {
     this._color = color;
     this._highlight = highlight;
   }
+
+  // Draw the actual hexagon shape
+  _drawShape() {
+    this._updateBlinking();
+    
+    const coords = this._getCoords();
+    
+    if (this._highlight !== false) {
+      this._canvas.drawWithShadow(
+          this._highlight * Hexagon.HIGHLIGHT_SIZE, Hexagon.HIGHLIGHT_COLOR, 
+          this._drawWithCoords.bind(this, coords));
+    } else {
+      this._drawWithCoords(coords);
+    }
+  }
+  
+  _getCoords() {
+    let radius = this._radius;
+    
+    if (this._blinking) {
+      const blinkHalf = Hexagon.BLINK_MAX / 2;
+      const blinkScale = 1 - Math.abs(blinkHalf - this._blinking) / blinkHalf;
+      const blinkSize = Hexagon.BLINK_SIZE * Easing.CubicInOut(blinkScale);
+      radius += blinkSize;
+    }
+    
+    const coords = [];
+    
+    for (let i = 0; i < 6; i ++) {
+      const startAngle = i * Math.PI / 3;
+      const endAngle = (i + 1) * Math.PI / 3;
+
+      const startCoord = new Coordinate(
+          this._center.x + Math.cos(startAngle) * radius,
+          this._center.y + Math.sin(startAngle) * radius);
+      const endCoord = new Coordinate(
+          this._center.x + Math.cos(endAngle) * radius,
+          this._center.y + Math.sin(endAngle) * radius);
+
+      coords.push(startCoord);
+    }
+    
+    return coords;
+  }
   
   // Draw the text
-  drawText() {
+  _drawText() {
     if (!this._shouldDraw) return;
     
     this._canvas.drawText(this._center, this._text, 'center', '30px Arial');
+  }
+
+  _draw() {
+    this._drawShape();
+    this._drawText();
   }
   
   _drawWithCoords(coords) {
@@ -105,9 +121,10 @@ class Hexagon {
   }
 }
 
-Hexagon.BLINK_MAX = 30;
-Hexagon.BLINK_SHADOW_COLOR = 'yellow';
-Hexagon.BLINK_SHADOW_SIZE = 50;
+Hexagon.SPACING = 10;
+
+Hexagon.BLINK_MAX = 15;
+Hexagon.BLINK_SIZE = 10;
 
 Hexagon.HIGHLIGHT_COLOR = 'yellow';
 Hexagon.HIGHLIGHT_SIZE = 40;
