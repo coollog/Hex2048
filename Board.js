@@ -43,16 +43,16 @@ class Board {
 
   // Create all of the hexagon shapes
   createAll() {
-    for (let row = 0; row < this._width; row ++) {
-      for (let col = 0; col < this._width; col ++) {
+    for (let col = 0; col < this._width; col ++) {
+      for (let row = 0; row < this._width; row ++) {
         // Create each hexagon.
-        if (!this._isIndexInside(row, col)) continue;
+        if (!this._isIndexInside(col, row)) continue;
         
-        const xy = this.indexToXY(row, col);
+        const xy = this.indexToXY(col, row);
         let hexagon = 
             new Hexagon(this._canvas, xy, this._radius - Hexagon.SPACING);
         hexagon.text = '';
-        this.hexagons[row][col] = hexagon;
+        this.hexagons[col][row] = hexagon;
         
         // Create background hexagon.
         new HexagonBackground(this._canvas, xy, this._radius + Hexagon.SPACING);
@@ -62,10 +62,6 @@ class Board {
   
   // Collapse towards dir; returned is an object with two fields:
   // - changed: whether or there was a hexagon that was changed
-  // - result: a 2d array of:
-  //    {before: the value in this hexagon before collapse,
-  //     after:  the value in this hexagon after collapse}
-  // TODO: Change to:
   // - result: a 2d array of:
   //    {before: the value in this hexagon before collapse,
   //     after:  the value in this hexagon after collapse,
@@ -99,15 +95,23 @@ class Board {
     // Iterate through each line and combine/compress as needed
     for (let line = 0; line < this._width; line++) {
       // Helper func: Update curH value and perform other needed actions
-      // Note that result.change at iIndex and jIndex (optional) will be updated with
-      //    where the hexagon WILL move to
-      function updateCurH(newValue, iIndex, jIndex) {
+      // Note that result.change at iIndices and jIndices (optional) will be 
+      //    updated with where the hexagon WILL move to
+      function updateCurH(newValue, iIndices, jIndices) {
         curH.after = newValue;
-        changed = changed || curH.before != curH.after;
+        changed = changed || curH.before !== curH.after;
         
-        result[iIndex.x][iIndex.y].change = [indicesInLine[curIndex].x, indicesInLine[curIndex].y];
-        if (typeof jIndex !== 'undefined') {
-          result[jIndex.x][jIndex.y].change = [indicesInLine[curIndex].x, indicesInLine[curIndex].y];
+        let curIndices = indicesInLine[curIndex];
+
+        if (iIndices[0] !== curIndices[0] || iIndices[1] !== curIndices[1]) {
+          result[iIndices[0]][iIndices[1]].change = [curIndices[0], curIndices[1]];
+        }
+        
+        // If jIndices (optional) was supplied
+        if (typeof jIndices !== 'undefined') {
+          if (jIndices[0] !== curIndices[0] || jIndices[1] !== curIndices[1]) {
+            result[jIndices[0]][jIndices[1]].change = [curIndices[0], curIndices[1]];
+          }
         }
         
         curIndex++;
@@ -121,15 +125,14 @@ class Board {
         // All hexagons have been considered in this line so break out of loop
         if (typeof temp === 'undefined') break;
         
-        let x = indicesInLine[i - 1].x + this._iters[dir].line.col;
-        let y = indicesInLine[i - 1].y + this._iters[dir].line.row;
+        let col = indicesInLine[i - 1][0] + this._iters[dir].line.col;
+        let row = indicesInLine[i - 1][1] + this._iters[dir].line.row;
         
         // Check if this is a valid hexagon
-        if (x < this._width && y < this._width &&
-            x >= 0 && y >= 0) {
-          let hexagon = this.hexagons[x][y];
+        if (col < this._width && row < this._width && col >= 0 && row >= 0) {
+          let hexagon = this.hexagons[col][row];
           if (typeof hexagon !== 'undefined') {
-            indicesInLine.push({x: x, y: y});
+            indicesInLine.push([col, row]);
           }
         } else {
           // If a hexagon is not valid, then all others following same order will
@@ -145,26 +148,26 @@ class Board {
       
       while (j < indicesInLine.length && k < 1000) {
         // console.log(indicesInLine[i].x + ',' + indicesInLine[i].y);
-        var curH = result[indicesInLine[curIndex].x][indicesInLine[curIndex].y];
-        var thisH = this.hexagons[indicesInLine[i].x][indicesInLine[i].y];
-        var nextH = this.hexagons[indicesInLine[j].x][indicesInLine[j].y];
+        var curH = result[indicesInLine[curIndex][0]][indicesInLine[curIndex][1]];
+        var iH = this.hexagons[indicesInLine[i][0]][indicesInLine[i][1]];
+        var jH = this.hexagons[indicesInLine[j][0]][indicesInLine[j][1]];
         
-        if (thisH.text == '') {
+        if (iH.text == '') {
           // console.log("this is empty");
           
           i = j;
           j++;
         } else {
-          if (nextH.text == '') {
+          if (jH.text == '') {
             // console.log("next is empty");
             
             j++;
           } else {
-            if (thisH.text == nextH.text) {
+            if (iH.text == jH.text) {
               // console.log("combine this and next");
               
               // Add to score if two blocks are combined
-              let doubled = parseInt(thisH.text) * 2;
+              let doubled = parseInt(iH.text) * 2;
               this._score += doubled;
               
               updateCurH(doubled, indicesInLine[i], indicesInLine[j]);
@@ -176,9 +179,7 @@ class Board {
             } else {
               // console.log("don't combine this and next");
               
-              curH.after = thisH.text;
-              changed = changed || curH.before != curH.after;
-              curIndex++;
+              updateCurH(iH.text, indicesInLine[i]);
               
               i = j;
               j++;
@@ -190,28 +191,30 @@ class Board {
       }
       
       // Update curH because curIndex might have been updated
-      curH = result[indicesInLine[curIndex].x][indicesInLine[curIndex].y];
+      curH = result[indicesInLine[curIndex][0]][indicesInLine[curIndex][1]];
       
       // Check if there is a value at the end of the line that needs to be copied
-      // into curH (thisH location)
+      // into curH (iH location)
       if (i < indicesInLine.length) {
-        thisH = this.hexagons[indicesInLine[i].x][indicesInLine[i].y];
-        if (thisH.text != '') {
-          updateCurH(thisH.text, indicesInLine[i]);
+        iH = this.hexagons[indicesInLine[i][0]][indicesInLine[i][1]];
+        if (iH.text != '') {
+          updateCurH(iH.text, indicesInLine[i]);
+          
+          // Check if this is the last hex in the line; if so, don't need to check j
           if (i == indicesInLine.length - 1) {
             continue;
           } else {
-            curH = result[indicesInLine[curIndex].x][indicesInLine[curIndex].y];
+            curH = result[indicesInLine[curIndex][0]][indicesInLine[curIndex][1]];
           }
         }
       }
       
       // Check if there is a value at the end of the line that needs to be copied
-      // into curH (nextH location)
+      // into curH (jH location)
       if (j < indicesInLine.length) {
-        nextH = this.hexagons[indicesInLine[j].x][indicesInLine[j].y];
-        if (nextH.text != '') {
-          updateCurH(nextH.text, indicesInLine[j]);
+        jH = this.hexagons[indicesInLine[j][0]][indicesInLine[j][1]];
+        if (jH.text != '') {
+          updateCurH(jH.text, indicesInLine[j]);
         }
       }
     }
@@ -246,10 +249,10 @@ class Board {
   // Find an empty block and put a 2 or 4 in it
   addRandom() {
     while (true) {
-      let x = Math.floor(Math.random() * (this._width));
-      let y = Math.floor(Math.random() * (this._width));
+      let col = Math.floor(Math.random() * (this._width));
+      let row = Math.floor(Math.random() * (this._width));
       
-      let hexagon = this.hexagons[x][y];
+      let hexagon = this.hexagons[col][row];
       if (typeof hexagon !== 'undefined' && hexagon.text == '') {
         hexagon.text = Math.random() < 0.5 ? '2' : '4'; 
         break;
@@ -352,16 +355,13 @@ class Board {
     
     let indices = [];
     
-    indices.push({
-      x: iter.start.col,
-      y: iter.start.row
-    });
+    indices.push([iter.start.col, iter.start.row]);
     
     for (let i = 1; i < this._width; i++) {
-      indices.push({
-        x: indices[i - 1].x + ((i < this._numPerEdge) ? iter.first.col : iter.second.col),
-        y: indices[i - 1].y + ((i < this._numPerEdge) ? iter.first.row : iter.second.row)
-      })
+      indices.push([
+        indices[i - 1][0] + ((i < this._numPerEdge) ? iter.first.col : iter.second.col),
+        indices[i - 1][1] + ((i < this._numPerEdge) ? iter.first.row : iter.second.row)
+      ])
     }
     
     // for (let i = 0; i < this._width; i++) {
