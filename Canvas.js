@@ -28,6 +28,11 @@ class Canvas {
     this._context.stroke();
   }
   
+  // Draw a stroke rectangle with coord = top left corner
+  drawStrokeRect(coord, width, height) {
+    this._context.strokeRect(coord.x, coord.y, width, height);
+  }
+  
   // Draw polygon shape (will apply color and stroke)
   drawPolygon(coords, color) {
     this._context.beginPath();

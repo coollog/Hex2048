@@ -6,8 +6,13 @@
  * Controls the state of the game.
  */
 class Controller {
-  constructor(board) {
-    this.state = new Controller.StartingState();
+  constructor(game, gestureHandler, clickHandler) {
+    this._game = game;
+    this._gestureHandler = gestureHandler;
+    this._clickHandler = clickHandler;
+    
+    // this.state = new Controller.StartingState();
+    this.state = new Controller.HomeState();
     
     // Attach event handlers.
     Events.on(Controller.EVENT_TYPES.INPUT_DIRECTION, this._input, this);
@@ -40,6 +45,7 @@ Controller.STATES = {
   STARTING: 0,
   READY: 1,
   ANIMATING: 2, // When the tiles are animating.
+  HOME: 3,
 };
 
 Controller.EVENT_TYPES = {
@@ -103,6 +109,9 @@ Controller.StartingState = class extends Controller.State {
     this._controller.board = board;
     
     this._controller.state = new Controller.ReadyState();
+    
+    // Enable gesture drawing
+    this._controller._gestureHandler.drawOn = true;
   }
 }
 
@@ -216,3 +225,28 @@ Controller.AnimatingState = class extends Controller.State {
 
 // Total time steps for animation.
 Controller.AnimatingState.ANIMATE_MAX = 15;
+
+/**
+ * Represents the HOME state.
+ */
+Controller.HomeState = class extends Controller.State {
+  constructor() {
+    super(Controller.STATES.HOME);
+    
+  }
+  
+  _controllerReady() {
+    this._controller = this._controller;
+    
+    // Disable gesture drawing
+    this._controller._gestureHandler.drawOn = false;
+    
+    let controller = this._controller;
+    const home = new Home(canvas, this._controller._game, this._controller._clickHandler,
+        start);
+        
+    function start() {
+      controller.state = new Controller.StartingState();
+    }
+  }
+}

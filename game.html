@@ -28,7 +28,9 @@
 <script src="InputHandler.js"></script>
 <script src="KeyHandler.js"></script>
 <script src="GestureHandler.js"></script>
+<script src="ClickHandler.js"></script>
 <script src="Board.js"></script>
+<script src="Home.js"></script>
 
 <script>
   const ASSETS = {
@@ -36,13 +38,15 @@
   };
   const FPS = 60;
 
+  const game = document.getElementById('game'); 
   const canvas = new Canvas('game');
   
   const inputHandler = new InputHandler(canvas);
   const keyHandler = new KeyHandler(canvas);
   const gestureHandler = new GestureHandler(canvas);
+  const clickHandler = new ClickHandler(canvas);
   
-  const controller = new Controller();
+  const controller = new Controller(game, gestureHandler, clickHandler);
   
   const drawTimer = new DrawTimer(canvas, FPS);
   drawTimer.start();

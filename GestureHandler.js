@@ -9,6 +9,7 @@
 class GestureHandler {
   constructor(canvas) {
     this._canvas = canvas;
+    this._drawOn = false;
     this._dragging = false;
     
     // Attach event listeners.
@@ -17,6 +18,16 @@ class GestureHandler {
     Events.on(InputHandler.EVENT_TYPES.DRAG_END, this._dragEnd, this);
     
     Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this, 100);
+  }
+  
+  set drawOn(drawOn) {
+    this._drawOn = drawOn;
+    
+    if (drawOn) {
+      Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this, 100);
+    } else {
+      Events.off(DrawTimer.EVENT_TYPES.DRAW);
+    }
   }
   
   _draw(imgRightArrow = ASSETS.RIGHT_ARROW) {
