@@ -42,9 +42,9 @@ class Canvas {
   }
   
   // Draw text centered at coord
-  drawText(coord, text, textAlign, font) {
+  drawText(coord, text, textAlign, font, color = 'black') {
     this._context.font = font;
-    this._context.fillStyle = 'black';
+    this._context.fillStyle = color;
     this._context.textAlign = textAlign;
     this._context.textBaseline = 'middle';
     this._context.fillText(text, ...coord.toArray());

@@ -44,9 +44,10 @@ class Hexagon {
       text = 'default';
     }
     
-    const {color, highlight} = Hexagon.NUMBER_PROPS[text];
+    const {color, textColor, highlight} = Hexagon.NUMBER_PROPS[text];
     this._color = color;
     this._highlight = highlight;
+    this._textColor = textColor;
   }
 
   // Draw the actual hexagon shape
@@ -102,7 +103,8 @@ class Hexagon {
   _drawText() {
     if (!this._shouldDraw) return;
     
-    this._canvas.drawText(this._center, this._text, 'center', '26px Arial');
+    this._canvas.drawText(
+        this._center, this._text, 'center', Hexagon.FONT, this._textColor);
   }
 
   _draw() {
@@ -128,6 +130,8 @@ class Hexagon {
 
 Hexagon.SPACING = 10;
 
+Hexagon.FONT = 'bold 26px "Clear Sans", "Helvetica Neue", Arial, sans-serif';
+
 Hexagon.BLINK_MAX = 15;
 Hexagon.BLINK_SIZE = 10;
 
@@ -135,18 +139,18 @@ Hexagon.HIGHLIGHT_COLOR = 'yellow';
 Hexagon.HIGHLIGHT_SIZE = 20;
 
 Hexagon.NUMBER_PROPS = {
-  '': { color: 'white', highlight: false }, 
-  2: { color: '#F0E4D8', highlight: false },
-  4: { color: '#EEE0C6', highlight: false },
-  8: { color: '#EFAF79', highlight: false },
-  16: { color: '#E58D53', highlight: false },
-  32: { color: '#EB573D', highlight: false },
-  64: { color: '#E7554A', highlight: false },
-  128: { color: '#ECC962', highlight: false },
-  256: { color: '#EBC94C', highlight: false },
-  512: { color: '#EEC341', highlight: 0.25 },
-  1024: { color: '#ECC22E', highlight: 0.5 },
-  2048: { color: '#edc22e', highlight: 0.75 },
-  4096: { color: '#59E093', highlight: 1 },
-  default: { color: '#59E093', highlight: 1 },
+  '': { color: 'white', textColor: 'black', highlight: false }, 
+  2: { color: '#F0E4D8', textColor: '#776e65', highlight: false },
+  4: { color: '#EEE0C6', textColor: '#776e65', highlight: false },
+  8: { color: '#EFAF79', textColor: 'white', highlight: false },
+  16: { color: '#E58D53', textColor: 'white', highlight: false },
+  32: { color: '#EB573D', textColor: 'white', highlight: false },
+  64: { color: '#E7554A', textColor: 'white', highlight: false },
+  128: { color: '#ECC962', textColor: 'white', highlight: false },
+  256: { color: '#EBC94C', textColor: 'white', highlight: false },
+  512: { color: '#EEC341', textColor: 'white', highlight: 0.25 },
+  1024: { color: '#ECC22E', textColor: 'white', highlight: 0.5 },
+  2048: { color: '#edc22e', textColor: 'white', highlight: 0.75 },
+  4096: { color: '#59E093', textColor: 'white', highlight: 1 },
+  default: { color: '#59E093', textColor: 'white', highlight: 1 },
 };
