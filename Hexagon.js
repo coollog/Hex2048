@@ -53,18 +53,19 @@ class Hexagon {
   _drawShape() {
     this._updateBlinking();
     
-    const coords = this._getCoords();
+    const radius = this._calculateRadius();
+    const coords = this._getCoords(radius);
     
-    if (this._highlight !== false) {
-      this._canvas.drawWithShadow(
-          this._highlight * Hexagon.HIGHLIGHT_SIZE, Hexagon.HIGHLIGHT_COLOR, 
+    if (this._highlight !== false && this._shouldDraw) {
+      const highlightSize = this._highlight * (Hexagon.HIGHLIGHT_SIZE + radius);
+      this._canvas.drawWithShadow(highlightSize, Hexagon.HIGHLIGHT_COLOR, 
           this._drawWithCoords.bind(this, coords));
     } else {
       this._drawWithCoords(coords);
     }
   }
   
-  _getCoords() {
+  _calculateRadius() {
     let radius = this._radius;
     
     if (this._blinking) {
@@ -74,6 +75,10 @@ class Hexagon {
       radius += blinkSize;
     }
     
+    return radius;
+  }
+  
+  _getCoords(radius = this._calculateRadius()) {
     const coords = [];
     
     for (let i = 0; i < 6; i ++) {
@@ -97,7 +102,7 @@ class Hexagon {
   _drawText() {
     if (!this._shouldDraw) return;
     
-    this._canvas.drawText(this._center, this._text, 'center', '30px Arial');
+    this._canvas.drawText(this._center, this._text, 'center', '26px Arial');
   }
 
   _draw() {
@@ -127,7 +132,7 @@ Hexagon.BLINK_MAX = 15;
 Hexagon.BLINK_SIZE = 10;
 
 Hexagon.HIGHLIGHT_COLOR = 'yellow';
-Hexagon.HIGHLIGHT_SIZE = 40;
+Hexagon.HIGHLIGHT_SIZE = 20;
 
 Hexagon.NUMBER_PROPS = {
   '': { color: 'white', highlight: false }, 
@@ -141,7 +146,7 @@ Hexagon.NUMBER_PROPS = {
   256: { color: '#EBC94C', highlight: false },
   512: { color: '#EEC341', highlight: 0.25 },
   1024: { color: '#ECC22E', highlight: 0.5 },
-  2048: { color: '#59E093', highlight: 0.75 },
+  2048: { color: '#edc22e', highlight: 0.75 },
   4096: { color: '#59E093', highlight: 1 },
   default: { color: '#59E093', highlight: 1 },
 };

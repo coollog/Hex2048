@@ -39,7 +39,7 @@ class PriorityQueue {
     // Only one node is created per priority, so key-values on the same priority
     // are appended to the same node. Any new values replace old values for the
     // same key.
-    if (this.has(priority)) {
+    if (this._hasPriority(priority)) {
       const nodeId = this._priorityMap[priority];
       this._keyMap.add(key, nodeId);
       this._getNode(nodeId).set(key, value);

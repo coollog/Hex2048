@@ -166,10 +166,8 @@ Controller.AnimatingState = class extends Controller.State {
         // Don't animate if original is blank.
         if (before === '') continue;
         
-        // Disable original's drawing if changed position.
-        if (row !== newRow || col !== newCol) {
-          this._controller.board.hexagons[row][col].disableDrawing();
-        }
+        // Disable original's drawing.
+        this._controller.board.hexagons[row][col].disableDrawing();
         
         // If stay in same position, draw with lower priority.
         const samePosition = row === newRow && col === newCol;
@@ -217,4 +215,4 @@ Controller.AnimatingState = class extends Controller.State {
 };
 
 // Total time steps for animation.
-Controller.AnimatingState.ANIMATE_MAX = 20;
+Controller.AnimatingState.ANIMATE_MAX = 15;
