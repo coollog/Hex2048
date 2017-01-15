@@ -5,7 +5,7 @@
  */
 class Events {
   // Attach 'handler' to be called when event of type 'eventType' is received.
-  // The handler is cslled with this as 'owner'.
+  // The handler is called with this as 'owner'.
   // Handlers are called in the priority-order (lowest first), then insertion
   // order.
   static on(eventType, handler, owner, priority = 1) {

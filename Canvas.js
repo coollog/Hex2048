@@ -67,6 +67,24 @@ class Canvas {
     this._context.restore();
   }
   
+  // Draw a button and text inside.  Parameters:
+  //  clickHandler - clickHandler so button event can be registered
+  //  owner - handler of the event to be added
+  //  area - {coord: top left corner, width: width, height: height}
+  //  text - text to be displayed in button
+  //  button - unique button name/id
+  //  callBackFunc - function to be called when button clicked
+  drawButton(clickHandler, owner, area, text, button, callBackFunc) {
+    this.drawStrokeRect(area.coord, area.width, area.height);
+    
+    let center = new Coordinate(area.coord.x + area.width / 2,
+        area.coord.y + area.height / 2);
+    this.drawText(center, text, 'center', '20px Arial');
+    
+    clickHandler.registerArea(area, button);
+    Events.on(button, callBackFunc, owner);
+  }
+  
   drawWithOpacity(opacity, drawFn) {
     this._context.globalAlpha = opacity;
     drawFn();

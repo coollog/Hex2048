@@ -44,8 +44,9 @@ class Controller {
 Controller.STATES = {
   STARTING: 0,
   READY: 1,
-  ANIMATING: 2, // When the tiles are animating.
-  HOME: 3,
+  ANIMATING: 2,   // When the tiles are animating.
+  HOME: 3,        // Home page (start, view high score)
+  HIGH_SCORE: 4,  // View high scores
 };
 
 Controller.EVENT_TYPES = {
@@ -243,10 +244,42 @@ Controller.HomeState = class extends Controller.State {
     
     let controller = this._controller;
     const home = new Home(canvas, this._controller._game, this._controller._clickHandler,
-        start);
+        start, highScores);
         
+    // Change state to start
     function start() {
       controller.state = new Controller.StartingState();
+    }
+    
+    // Change state to high scores
+    function highScores() {
+      controller.state = new Controller.HighScoreState();
+    }
+  }
+}
+
+/**
+ * Represents the HIGH SCORE state.
+ */
+Controller.HighScoreState = class extends Controller.State {
+  constructor() {
+    super(Controller.STATES.HIGH_SCORE);
+    
+  }
+  
+  _controllerReady() {
+    this._controller = this._controller;
+    
+    // Disable gesture drawing
+    this._controller._gestureHandler.drawOn = false;
+    
+    let controller = this._controller;
+    const highScore = new HighScore(canvas, this._controller._game,
+        this._controller._clickHandler, backToHome);
+        
+    // Change state back to home
+    function backToHome() {
+      controller.state = new Controller.HomeState();
     }
   }
 }

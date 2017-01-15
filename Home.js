@@ -4,13 +4,14 @@
 // import 'ClickHandler'
 
 class Home {
-  constructor(canvas, game, clickHandler, start) {
+  constructor(canvas, game, clickHandler, start, highScores) {
     this._canvas = canvas;
     this._game = game;
     this._clickHandler = clickHandler;
     
     // Controller functions
     this._start = start;
+    this._highScores = highScores;
     
     // Fields to prevent button from being pressed twice
     this._started = false;
@@ -24,9 +25,8 @@ class Home {
     const BUTTON_WIDTH = 120;
     const BUTTON_HEIGHT = 30;
     
-    const coordTitle = new Coordinate(this._game.width / 2, this._game.height / 3);
-    
     // Draw title
+    const coordTitle = new Coordinate(this._game.width / 2, this._game.height / 3);
     this._canvas.drawText(coordTitle, 'HEX2048', 'center', '60px Arial');
     
     // Draw start button
@@ -36,7 +36,8 @@ class Home {
       width: BUTTON_WIDTH,
       height: BUTTON_HEIGHT,
     }
-    this._drawButton(butStartArea, 'Start', Home.BUTTONS.START, this._clickStart);
+    this._canvas.drawButton(this._clickHandler, this, butStartArea, 'Start', 
+        Home.BUTTONS.START, this._clickStart);
     
     // Draw high score button
     const butHighScoreArea = {
@@ -45,18 +46,8 @@ class Home {
       width: BUTTON_WIDTH,
       height: BUTTON_HEIGHT,
     }
-    this._drawButton(butHighScoreArea, 'High Scores', Home.BUTTONS.HIGH_SCORES, this._clickHighScores);
-  }
-  
-  _drawButton(area, text, button, callBackFunc) {
-    this._canvas.drawStrokeRect(area.coord, area.width, area.height);
-    
-    let center = new Coordinate(area.coord.x + area.width / 2,
-        area.coord.y + area.height / 2);
-    this._canvas.drawText(center, text, 'center', '20px Arial');
-    
-    this._clickHandler.registerArea(area, button);
-    Events.on(button, callBackFunc, this);
+    this._canvas.drawButton(this._clickHandler, this, butHighScoreArea, 'High Scores', 
+        Home.BUTTONS.HIGH_SCORES, this._clickHighScores);
   }
   
   _clickStart() {
@@ -87,7 +78,7 @@ class Home {
       Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
       
       // Call start (which will change the state);
-      // this._start();
+      this._highScores();
     }
   }
 }
