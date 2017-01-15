@@ -14,6 +14,7 @@
   <img id="img-right-arrow" src="assets/right_arrow.png" />
 </assets>
 
+<script src="CanvasInput.min.js"></script>
 <script src="Coordinate.js"></script>
 <script src="Easing.js"></script>
 <script src="Hexagon.js"></script>
@@ -32,6 +33,7 @@
 <script src="Board.js"></script>
 <script src="Home.js"></script>
 <script src="HighScore.js"></script>
+<script src="Lost.js"></script>
 
 <script>
   const ASSETS = {
@@ -46,10 +48,10 @@
   const keyHandler = new KeyHandler(canvas);
   const gestureHandler = new GestureHandler(canvas);
   const clickHandler = new ClickHandler(canvas);
-  
-  const controller = new Controller(game, gestureHandler, clickHandler);
-  
   const drawTimer = new DrawTimer(canvas, FPS);
+  
+  const controller = new Controller(game, drawTimer, gestureHandler, clickHandler);
+  
   drawTimer.start();
 </script>
 
@@ -104,7 +106,6 @@ Your Rank: <rank></rank><br />
     const LIMIT = 10;
     
     callLambda('getScores', { limit: LIMIT }).then((res) => {
-      console.log(res);
       if (res.success) {
         scores = ``;
         for (let entry of res.scores) {

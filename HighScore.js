@@ -22,24 +22,26 @@ class HighScore {
   _draw() {
     const BUTTON_WIDTH = 100;
     const BUTTON_HEIGHT = 30;
+    const HEIGHT_SCALE = 5;
+    const MIDDLE = this._game.width / 2; 
     
     // Draw title
-    const coordTitle = new Coordinate(this._game.width / 2, this._game.height / 3);
+    const coordTitle = new Coordinate(MIDDLE, this._game.height / HEIGHT_SCALE);
     this._canvas.drawText(coordTitle, 'HEX2048', 'center', '60px Arial');
     
     // Draw high score
-    const coordHS = new Coordinate(this._game.width / 2, this._game.height / 3 + 50);
+    const coordHS = new Coordinate(MIDDLE, this._game.height / HEIGHT_SCALE + 50);
     this._canvas.drawText(coordHS, 'High Scores', 'center', '40px Arial');
     
     // Define x values for: rank (left align), name (left), score (right)
-    const xRank = this._game.width / 2 - 150;
-    const xName = this._game.width / 2 - 110;
-    const xScore = this._game.width / 2 + 150;
+    const xRank = MIDDLE - 150;
+    const xName = MIDDLE - 110;
+    const xScore = MIDDLE + 150;
     
     // Get high scores
     if (this._haveHighScores) {
       let scoreCoord;
-      let y = this._game.height / 3 + 130;
+      let y = this._game.height / HEIGHT_SCALE + 130;
       for (let i = 0; i < this._scores.length; i ++) {
         let entry = this._scores[i];
         
@@ -50,9 +52,9 @@ class HighScore {
         y += 30;
       }
     } else {
-      let x = this._game.width / 2;
-      let y = this._game.height / 3 + 130;
-      this._canvas.drawText(new Coordinate(x, y), 'Retrieving Scores...', 'center', '30px Arial');
+      let x = MIDDLE;
+      let y = this._game.height / HEIGHT_SCALE + 140;
+      this._canvas.drawText(new Coordinate(x, y), 'Retrieving Scores...', 'center', '28px Arial');
     }
     
     // Draw back button
@@ -67,29 +69,29 @@ class HighScore {
   }
   
   _backToHome() {
-    if (!this._backed) {
-      // Prevent this from being activated multiple times
-      this._backed = true;
-      
-      // Deactivate the button
-      Events.off(HighScore.BUTTONS.HOME);
-      
-      // Stop drawing this high score page
-      Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
-      
-      // Call backToHome (which will change the state)
-      this._backToHome();
-    }
+    if (this._backed) return;
+    
+    // Prevent this from being activated multiple times
+    this._backed = true;
+    
+    // Deactivate the button
+    Events.off(HighScore.BUTTONS.HOME);
+    
+    // Stop drawing this high score page
+    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
+    
+    // Call backToHome (which will change the state)
+    this._backToHome();
   }
   
-  static _callLambda(type, params = {}) {
+  static callLambda(type, params = {}) {
     const LAMBDA_URL = 
         'https://7vm2om2s23.execute-api.us-east-1.amazonaws.com/prod/hex2048';
     
     const body = Object.assign({ type: type }, params);
     
     const request = {
-    	method: 'post',
+    	method: 'POST',
     	body: JSON.stringify(body)
     };
     
@@ -101,8 +103,7 @@ class HighScore {
   _getHighScores() {
     const LIMIT = 10;
     
-    HighScore._callLambda('getScores', { limit: LIMIT }).then((res) => {
-      console.log(res);
+    HighScore.callLambda('getScores', { limit: LIMIT }).then((res) => {
       if (res.success) {
         this._haveHighScores = true;
         for (let entry of res.scores) {

@@ -24,6 +24,10 @@ class Board {
     
     // Bind drawAll to draw event
     Events.on(DrawTimer.EVENT_TYPES.DRAW, this._drawAll, this);
+    
+    
+    // Todo: Remove; just here to test lost functionality
+    this._maxMoves = 3;
   }
   
   // Converts row,col indices to an XY coordinate.
@@ -275,6 +279,8 @@ class Board {
   
   // Return true if player lost
   lost() {
+    if (--this._maxMoves <= 0) return true;
+    
     if (this._isFilled()) {
       let cantMove = true;
       

@@ -8,10 +8,15 @@ class DrawTimer {
   constructor(canvas, fps) {
     this._canvas = canvas;
     this._interval = 1000 / fps;
+    this._timer;
   }
     
   start() {
-    setInterval(this._draw.bind(this), this._interval);
+    this._timer = setInterval(this._draw.bind(this), this._interval);
+  }
+  
+  stop() {
+    clearInterval(this._timer);
   }
   
   _draw() {

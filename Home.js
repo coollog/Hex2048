@@ -35,7 +35,7 @@ class Home {
           this._game.height / 3 + 50),
       width: BUTTON_WIDTH,
       height: BUTTON_HEIGHT,
-    }
+    };
     this._canvas.drawButton(this._clickHandler, this, butStartArea, 'Start', 
         Home.BUTTONS.START, this._clickStart);
     
@@ -45,45 +45,45 @@ class Home {
           this._game.height / 3 + 90),
       width: BUTTON_WIDTH,
       height: BUTTON_HEIGHT,
-    }
+    };
     this._canvas.drawButton(this._clickHandler, this, butHighScoreArea, 'High Scores', 
         Home.BUTTONS.HIGH_SCORES, this._clickHighScores);
   }
   
   _clickStart() {
-    if (!this._started) {
-      // Prevent this from being activated multiple times
-      this._started = true;
-      
-      // Deactivate the button
-      Events.off(Home.BUTTONS.START);
-      
-      // Stop drawing this home page
-      Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
-      
-      // Call start (which will change the state);
-      this._start();
-    }
+    if (this._started) return;
+    
+    // Prevent this from being activated multiple times
+    this._started = true;
+    
+    // Deactivate the button
+    Events.off(Home.BUTTONS.START);
+    
+    // Stop drawing this home page
+    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
+    
+    // Call start (which will change the state);
+    this._start();
   }
   
   _clickHighScores() {
-    if (!this._highScored) {
-      // Prevent this from being activated multiple times
-      this._highScored = true;
-      
-      // Deactivate the button
-      Events.off(Home.BUTTONS.HIGH_SCORES);
-      
-      // Stop drawing this home page
-      Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
-      
-      // Call start (which will change the state);
-      this._highScores();
-    }
+    if (this._highScored) return;
+    
+    // Prevent this from being activated multiple times
+    this._highScored = true;
+    
+    // Deactivate the button
+    Events.off(Home.BUTTONS.HIGH_SCORES);
+    
+    // Stop drawing this home page
+    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
+    
+    // Call start (which will change the state);
+    this._highScores();
   }
 }
 
 Home.BUTTONS = {
   START: 'button-home-start',
   HIGH_SCORES: 'button-home-high-score'
-} 
+};
