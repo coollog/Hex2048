@@ -1,11 +1,8 @@
 class HighScore {
-  constructor(canvas, game, clickHandler, backToHome) {
+  constructor(canvas, game, clickHandler) {
     this._canvas = canvas;
     this._game = game;
     this._clickHandler = clickHandler;
-    
-    // Controller functions
-    this._backToHome = backToHome;
     
     // Fields to prevent button from being pressed twice
     this._backed = false;
@@ -80,8 +77,8 @@ class HighScore {
     // Stop drawing this high score page
     Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
     
-    // Call backToHome (which will change the state)
-    this._backToHome();
+    // Change state back to home
+    Events.dispatch(HighScore.EVENT_TYPES.GOTO_HOME);
   }
   
   static callLambda(type, params = {}) {
@@ -118,4 +115,8 @@ class HighScore {
 
 HighScore.BUTTONS = {
   HOME: 'button-high-score-home'
-} 
+}
+
+HighScore.EVENT_TYPES = {
+  GOTO_HOME: 'high-score-goto-home'
+};

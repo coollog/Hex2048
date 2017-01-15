@@ -4,14 +4,10 @@
 // import 'ClickHandler'
 
 class Home {
-  constructor(canvas, game, clickHandler, start, highScores) {
+  constructor(canvas, game, clickHandler) {
     this._canvas = canvas;
     this._game = game;
     this._clickHandler = clickHandler;
-    
-    // Controller functions
-    this._start = start;
-    this._highScores = highScores;
     
     // Fields to prevent button from being pressed twice
     this._started = false;
@@ -62,8 +58,8 @@ class Home {
     // Stop drawing this home page
     Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
     
-    // Call start (which will change the state);
-    this._start();
+    // Change the state
+    Events.dispatch(Home.EVENT_TYPES.GOTO_STARTING);
   }
   
   _clickHighScores() {
@@ -78,12 +74,17 @@ class Home {
     // Stop drawing this home page
     Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
     
-    // Call start (which will change the state);
-    this._highScores();
+    // Change the state
+    Events.dispatch(Home.EVENT_TYPES.GOTO_HIGH_SCORE);
   }
 }
 
 Home.BUTTONS = {
   START: 'button-home-start',
   HIGH_SCORES: 'button-home-high-score'
+};
+
+Home.EVENT_TYPES = {
+  GOTO_STARTING: 'home-goto-starting',
+  GOTO_HIGH_SCORE: 'home-goto-high-score'
 };

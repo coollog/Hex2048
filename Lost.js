@@ -1,14 +1,10 @@
 class Lost {
-  constructor(canvas, game, drawTimer, board, clickHandler, highScores, backToHome) {
+  constructor(canvas, game, drawTimer, board, clickHandler) {
     this._canvas = canvas;
     this._game = game;
     this._drawTimer = drawTimer;
     this._board = board;
     this._clickHandler = clickHandler;
-    
-    // Controller functions
-    this._highScores = highScores;
-    this._backToHome = backToHome;
     
     // Fields to prevent button from being pressed twice
     this._highScored = false;
@@ -71,13 +67,16 @@ class Lost {
   _submit() {
     if (this._submitted) return;
     
-    // Restart the drawTimer
-    this._drawTimer.start();
-    
     const data = {
       name: this._input.value(),
       score: this._board.score
     };
+
+    // Make sure an actual name was inputted
+    if (data.name === '') return;
+
+    // Restart the drawTimer
+    this._drawTimer.start();
     
     HighScore.callLambda('addScore', data).then((res) => {
       if (res.success) {
@@ -86,7 +85,7 @@ class Lost {
             console.log(res.rank);
             
             // Go to high scores
-            this._highScores();
+            Events.dispatch(Lost.EVENT_TYPES.GOTO_HIGH_SCORE);
           }
         });
       }
@@ -107,12 +106,20 @@ class Lost {
     // Stop drawing this high score page
     Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
     
-    // Call backToHome (which will change the state)
-    this._backToHome();
+    // Restart the drawTimer
+    this._drawTimer.start();
+
+    // Go back to home (which will change the state)
+    Events.dispatch(Lost.EVENT_TYPES.GOTO_HOME);
   }
 }
 
 Lost.BUTTONS = {
   SUBMIT: 'button-lost-submit',
   HOME: 'button-lost-home'
-} 
+}
+
+Lost.EVENT_TYPES = {
+  GOTO_HOME: 'lost-goto-home',
+  GOTO_HIGH_SCORE: 'lost-goto-high-score'
+};

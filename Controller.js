@@ -225,6 +225,9 @@ Controller.AnimatingState = class extends Controller.State {
       
     // Check if lost 
     if (this._controller.board.lost()) {
+      // Disable gesture drawing
+      this._controller._gestureHandler.drawOn = false;
+
       this._controller.state = new Controller.LostState();
     } else {
       this._controller.state = new Controller.ReadyState();
@@ -242,25 +245,23 @@ Controller.HomeState = class extends Controller.State {
   constructor() {
     super(Controller.STATES.HOME);
     
+    Events.on(Home.EVENT_TYPES.GOTO_STARTING, this._start, this);
+    Events.on(Home.EVENT_TYPES.GOTO_HIGH_SCORE, this._highScores, this);
   }
   
-  _controllerReady() {
-    // Disable gesture drawing
-    this._controller._gestureHandler.drawOn = false;
-    
+  _controllerReady() {    
     let controller = this._controller;
-    const home = new Home(canvas, controller._game, controller._clickHandler,
-        start, highScores);
-        
-    // Change state to start
-    function start() {
-      controller.state = new Controller.StartingState();
-    }
+    const home = new Home(canvas, controller._game, controller._clickHandler);
+  }
+
+  // Change state to start
+  _start() {
+    this._controller.state = new Controller.StartingState();
+  }
     
     // Change state to high scores
-    function highScores() {
-      controller.state = new Controller.HighScoreState();
-    }
+  _highScores() {
+    this._controller.state = new Controller.HighScoreState();
   }
 };
 
@@ -270,20 +271,19 @@ Controller.HomeState = class extends Controller.State {
 Controller.HighScoreState = class extends Controller.State {
   constructor() {
     super(Controller.STATES.HIGH_SCORE);
+
+    Events.on(HighScore.EVENT_TYPES.GOTO_HOME, this._backToHome, this);
   }
   
   _controllerReady() {
-    // Disable gesture drawing
-    this._controller._gestureHandler.drawOn = false;
-    
     let controller = this._controller;
     const highScore = new HighScore(canvas, controller._game,
-        controller._clickHandler, backToHome);
-        
-    // Change state back to home
-    function backToHome() {
-      controller.state = new Controller.HomeState();
-    }
+        controller._clickHandler);
+  }
+
+  // Change state back to home
+  _backToHome() {
+    this._controller.state = new Controller.HomeState();
   }
 };
 
@@ -296,21 +296,21 @@ Controller.LostState = class extends Controller.State {
   }
   
   _controllerReady() {
-    // Disable gesture drawing
-    this._controller._gestureHandler.drawOn = false;
-    
     let controller = this._controller;
     const lost = new Lost(canvas, controller._game, controller._drawTimer,
-        controller.board, controller._clickHandler, highScores, backToHome);
-        
-    // Change state back to home
-    function backToHome() {
-      controller.state = new Controller.HomeState();
-    }
+        controller.board, controller._clickHandler);
     
-    // Submitted so display high scores
-    function highScores() {
-      controller.state = new Controller.HighScoreState();
-    }
+    Events.on(Lost.EVENT_TYPES.GOTO_HIGH_SCORE, this._highScores, this);
+    Events.on(Lost.EVENT_TYPES.GOTO_HOME, this._backToHome, this);
+  }
+        
+  // Change state back to home
+  _backToHome() {
+    this._controller.state = new Controller.HomeState();
+  }
+  
+  // Submitted so display high scores
+  _highScores() {
+    this._controller.state = new Controller.HighScoreState();
   }
 };
