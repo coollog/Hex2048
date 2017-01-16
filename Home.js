@@ -26,14 +26,13 @@ class Home {
     this._canvas.drawText(coordTitle, 'HEX2048', 'center', '60px Arial');
     
     // Draw start button
-    const butStartArea = {
-      coord: new Coordinate((this._game.width - BUTTON_WIDTH) / 2, 
-          this._game.height / 3 + 50),
-      width: BUTTON_WIDTH,
-      height: BUTTON_HEIGHT,
-    };
-    this._canvas.drawButton(this._clickHandler, this, butStartArea, 'Start', 
-        Home.BUTTONS.START, this._clickStart);
+    let coord = new Coordinate((this._game.width - BUTTON_WIDTH) / 2, 
+          this._game.height / 3 + 50);
+    let width = BUTTON_WIDTH;
+    let height = BUTTON_HEIGHT;
+
+    let butStart = new Button(this._canvas, coord, width, height,
+        'Start', this._clickStart);
     
     // Draw high score button
     const butHighScoreArea = {

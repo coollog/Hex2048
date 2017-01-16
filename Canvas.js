@@ -84,6 +84,14 @@ class Canvas {
     clickHandler.registerArea(area, button);
     Events.on(button, callBackFunc, owner);
   }
+
+  drawButton2(area, text) {
+    this.drawStrokeRect(area.coord, area.width, area.height);
+    
+    let center = new Coordinate(area.coord.x + area.width / 2,
+        area.coord.y + area.height / 2);
+    this.drawText(center, text, 'center', '20px Arial');
+  }
   
   drawWithOpacity(opacity, drawFn) {
     this._context.globalAlpha = opacity;
