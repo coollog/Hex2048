@@ -1,71 +1,101 @@
 class Lost {
-  constructor(canvas, game, drawTimer, board, clickHandler) {
+  constructor(canvas, board) {
     this._canvas = canvas;
-    this._game = game;
-    this._drawTimer = drawTimer;
     this._board = board;
-    this._clickHandler = clickHandler;
-    
-    // Fields to prevent button from being pressed twice
-    this._highScored = false;
-    this._backed = false;
     
     // Bind draw to draw event
     Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this);
+    
+    const butBackToHomeEnv = Lost._getBackToHomeButtonEnvelope(this._canvas);
+    const butSubmitEnv = Lost._getSubmitButtonEnvelope(this._canvas);
+
+    this._butBackToHome = new Button(this._canvas, butBackToHomeEnv,'Home');
+    this._butSubmit = new Button(this._canvas, butSubmitEnv,'Submit');
+    
+    this._butBackToHome.onClick(this._backToHome.bind(this));
+    this._butSubmit.onClick(this._submit.bind(this));
+  }
+  
+  static get _BUTTON_SIZE() {
+    return new Size(Lost._BUTTON_WIDTH, Lost._BUTTON_HEIGHT);
+  }
+  
+  static _getBackToHomeButtonEnvelope(canvas) {
+    assertParameters(arguments, Canvas);
+    
+    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
+        .translate(new Coordinate(-(HighScore._BUTTON_WIDTH + 50), 0))
+        .translate(new Coordinate(0, -(HighScore.BUTTON_HEIGHT + 50)));
+        
+    return new Envelope(topLeft, HighScore._BUTTON_SIZE);
+  }
+  
+  static _getSubmitButtonEnvelope(canvas) {
+    assertParameters(arguments, Canvas);
+    
+    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
+        .scale(1/2, 1/Lost._HEIGHT_SCALE)
+        .translate(new Coordinate(45, 130))
+        
+    return new Envelope(topLeft, Lost._BUTTON_SIZE);
+  }
+  
+  static _getNameInputEnvelope(canvas) {
+    assertParameters(arguments, Canvas);
+    
+    const size = new Size(Lost._INPUT_WIDTH, Lost._INPUT_HEIGHT);    
+    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
+        .scale(1, 1/Lost._HEIGHT_SCALE)
+        .translate(new Coordinate(Lost._INPUT_WIDTH, 130));
+    
+    return new Envelope(size, topLeft);
+  }
+  
+  static _getTitleCoord(canvas) {
+    assertParameters(arguments, Canvas);
+    
+    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
+        .scale(1/2, 1/Lost._HEIGHT_SCALE);
+        
+    return topLeft;
+  }
+  
+  static _getHSCoord(canvas) {
+    assertParameters(arguments, Canvas);
+    
+    const topLeft = Lost._getTitleCoord(canvas)
+        .translate(0, 90);
+        
+    return topLeft;
   }
   
   _draw() {
-    const BUTTON_WIDTH = 100;
-    const BUTTON_HEIGHT = 38;
-    const INPUT_WIDTH = 150;
-    const INPUT_HEIGHT = 25;
-    const HEIGHT_SCALE = 4;
-    const MIDDLE = this._game.width / 2;
-    
     // Draw title
-    const coordTitle = new Coordinate(MIDDLE, this._game.height / HEIGHT_SCALE);
-    this._canvas.drawText(coordTitle, 'HEX2048', 'center', '60px Arial');
+    this._canvas.drawText(Lost._getTitleCoord(this._canvas), 
+        'HEX2048', 'center', '60px Arial');
     
     // Draw your score: #
-    const coordHS = new Coordinate(MIDDLE, this._game.height / HEIGHT_SCALE + 90);
-    this._canvas.drawText(coordHS, ('Your Score: ' + this._board.score), 'center', '40px Arial');
+    this._canvas.drawText(Lost._getHSCoord(this._canvas), 
+        ('Your Score: ' + this._board.score), 'center', '40px Arial');
     
     // Add in text input for name
+    const NameInputEnv = Lost._getNameInputEnvelope(this._canvas);
     this._input = new CanvasInput({
-      canvas: this._game,
-      x: MIDDLE - INPUT_WIDTH,
-      y: this._game.height / HEIGHT_SCALE + 130,
-      width: INPUT_WIDTH,
-      height: INPUT_HEIGHT,
+      canvas: this._canvas,
+      x: NameInputEnv.topLeft.x,
+      y: NameInputEnv.topLeft.y,
+      width: NameInputEnv.size.width,
+      height: NameInputEnv.size.height,
       placeHolder: 'Name'
     });
     
-    // Draw submit button
-    const butSubmitArea = {
-      coord: new Coordinate((MIDDLE + 45), 
-          this._game.height / HEIGHT_SCALE + 130),
-      width: BUTTON_WIDTH,
-      height: BUTTON_HEIGHT,
-    };
-    this._canvas.drawButton(this._clickHandler, this, butSubmitArea, 'Submit', 
-        Lost.BUTTONS.SUBMIT, this._submit);
-    
-    // Draw back button
-    const butHomeArea = {
-      coord: new Coordinate((this._game.width - BUTTON_WIDTH - 50), 
-          this._game.height - BUTTON_HEIGHT - 50),
-      width: BUTTON_WIDTH,
-      height: BUTTON_HEIGHT,
-    };
-    this._canvas.drawButton(this._clickHandler, this, butHomeArea, 'Home', 
-        Lost.BUTTONS.HOME, this._backToHome);
-    
     // Need to disable further drawing or else input will not work
-    this._drawTimer.stop();
+    Events.dispatch(DrawTimer.EVENT_TYPES.STOP);
   }
   
-  _submit() {
-    if (this._submitted) return;
+  _submit(button) {
+    // Prevent this from being activated multiple times
+    button.disable();
     
     const data = {
       name: this._input.value(),
@@ -76,7 +106,7 @@ class Lost {
     if (data.name === '') return;
 
     // Restart the drawTimer
-    this._drawTimer.start();
+    Events.dispatch(DrawTimer.EVENT_TYPES.START);
     
     HighScore.callLambda('addScore', data).then((res) => {
       if (res.success) {
@@ -94,32 +124,35 @@ class Lost {
     });
   }
   
-  _backToHome() {
-    if (this._backed) return;
-    
+  _backToHome(button) {
     // Prevent this from being activated multiple times
-    this._backed = true;
+    button.disable();
     
-    // Deactivate the button
-    Events.off(Lost.BUTTONS.HOME);
-    
-    // Stop drawing this high score page
-    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
+    // Stop drawing this page
+    this._deactivateEvents();
     
     // Restart the drawTimer
-    this._drawTimer.start();
+    Events.dispatch(DrawTimer.EVENT_TYPES.START);
 
     // Go back to home (which will change the state)
     Events.dispatch(Lost.EVENT_TYPES.GOTO_HOME);
   }
-}
-
-Lost.BUTTONS = {
-  SUBMIT: 'button-lost-submit',
-  HOME: 'button-lost-home'
+  
+  // Deactivate all events related to this page
+  _deactivateEvents() {
+    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
+    this._butBackToHome.remove();
+    this._butSubmit.remove();
+  }
 }
 
 Lost.EVENT_TYPES = {
   GOTO_HOME: 'lost-goto-home',
   GOTO_HIGH_SCORE: 'lost-goto-high-score'
 };
+
+Lost._BUTTON_WIDTH = 100;
+Lost._BUTTON_HEIGHT = 38;
+Lost._INPUT_WIDTH = 150;
+Lost._INPUT_HEIGHT = 25;
+Lost._HEIGHT_SCALE = 4;

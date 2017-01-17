@@ -5,6 +5,8 @@
  */
 class HexagonBackground extends Hexagon {
   constructor(canvas, center, radius) {
+    assertParameters(arguments, Canvas, Coordinate, Number);
+    
     super(canvas, center, radius);
     
     Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
@@ -12,6 +14,8 @@ class HexagonBackground extends Hexagon {
   }
   
   _draw() {
+    assertParameters(arguments);
+    
     const coords = this._getCoords();
     this._canvas.drawPolygon(coords, HexagonBackground.BACKGROUND_COLOR);
   }

@@ -1,11 +1,6 @@
 class HighScore {
-  constructor(canvas, game, clickHandler) {
+  constructor(canvas) {
     this._canvas = canvas;
-    this._game = game;
-    this._clickHandler = clickHandler;
-    
-    // Fields to prevent button from being pressed twice
-    this._backed = false;
     
     // Get high scores
     this._haveHighScores = false;
@@ -14,68 +9,123 @@ class HighScore {
     
     // Bind draw to draw event
     Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this);
+    
+    // Create backToHome button
+    const butBackToHomeEnv = HighScore._getBackToHomeButtonEnvelope(this._canvas);
+
+    this._butBackToHome = new Button(
+          this._canvas, butBackToHomeEnv,HighScore._HOME_TEXT);
+    this._butBackToHome.onClick(this._backToHome.bind(this));
+  }
+  
+  static get _BUTTON_SIZE() {
+    return new Size(HighScore._BUTTON_WIDTH, HighScore._BUTTON_HEIGHT);
+  }
+  
+  static _getBackToHomeButtonEnvelope(canvas) {
+    assertParameters(arguments, Canvas);
+    
+    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
+        .translate(new Coordinate(-(HighScore._BUTTON_WIDTH + 50), 0))
+        .translate(new Coordinate(0, -(HighScore._BUTTON_HEIGHT + 50)));
+        
+    return new Envelope(topLeft, HighScore._BUTTON_SIZE);
+  }
+  
+  static _getTitleCoord(canvas) {
+    assertParameters(arguments, Canvas);
+    
+    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
+        .scale(1/2, 1/HighScore._HEIGHT_SCALE);
+        
+    return topLeft;
+  }
+  
+  static _getHighScoreCoord(canvas) {
+    assertParameters(arguments, Canvas);
+    
+    const topLeft = HighScore._getTitleCoord(canvas)
+        .translate(new Coordinate(0, 50));
+        
+    return topLeft;
+  }
+  
+  static _getRankCoord(canvas, position) {
+    assertParameters(arguments, Canvas, Number);
+    
+    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
+        .scale(1/2, 1/HighScore._HEIGHT_SCALE)
+        .translate(new Coordinate(-150, 100 + 30 * position));
+        
+    return topLeft;
+  }
+  
+  static _getNameCoord(canvas, position) {
+    assertParameters(arguments, Canvas, Number);
+    
+    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
+        .scale(1/2, 1/HighScore._HEIGHT_SCALE)
+        .translate(new Coordinate(-110, 100 + 30 * position));
+        
+    return topLeft;
+  }
+  
+  static _getScoreCoord(canvas, position) {
+    assertParameters(arguments, Canvas, Number);
+    
+    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
+        .scale(1/2, 1/HighScore._HEIGHT_SCALE)
+        .translate(new Coordinate(150, 100 + 30 * position));
+        
+    return topLeft;
+  }
+  
+  static _getRetrieveCoord(canvas) {
+    assertParameters(arguments, Canvas);
+    
+    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
+        .scale(1/2, 1/HighScore._HEIGHT_SCALE)
+        .translate(new Coordinate(0, 140));
+        
+    return topLeft;
+  }
+  
+  // Deactivate all events related to this page.
+  remove() {
+    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
+    this._butBackToHome.remove();
   }
   
   _draw() {
-    const BUTTON_WIDTH = 100;
-    const BUTTON_HEIGHT = 30;
-    const HEIGHT_SCALE = 5;
-    const MIDDLE = this._game.width / 2; 
-    
     // Draw title
-    const coordTitle = new Coordinate(MIDDLE, this._game.height / HEIGHT_SCALE);
-    this._canvas.drawText(coordTitle, 'HEX2048', 'center', '60px Arial');
+    this._canvas.drawText(HighScore._getTitleCoord(this._canvas),
+        HighScore._TITLE_TEXT, 'center', HighScore._TITLE_FONT);
     
     // Draw high score
-    const coordHS = new Coordinate(MIDDLE, this._game.height / HEIGHT_SCALE + 50);
-    this._canvas.drawText(coordHS, 'High Scores', 'center', '40px Arial');
-    
-    // Define x values for: rank (left align), name (left), score (right)
-    const xRank = MIDDLE - 150;
-    const xName = MIDDLE - 110;
-    const xScore = MIDDLE + 150;
+    this._canvas.drawText(HighScore._getHighScoreCoord(this._canvas),
+        HighScore._HS_TEXT, 'center', HighScore._HS_FONT);
     
     // Get high scores
     if (this._haveHighScores) {
-      let scoreCoord;
-      let y = this._game.height / HEIGHT_SCALE + 130;
-      for (let i = 0; i < this._scores.length; i ++) {
-        let entry = this._scores[i];
+      for (let position = 1; position <= this._scores.length; position ++) {
+        let entry = this._scores[position - 1];
         
-        this._canvas.drawText(new Coordinate(xRank, y), (i + 1), 'left', '20px Arial');
-        this._canvas.drawText(new Coordinate(xName, y), entry.name, 'left', '20px Arial');
-        this._canvas.drawText(new Coordinate(xScore, y), entry.score, 'right', '20px Arial');
-        
-        y += 30;
+        this._canvas.drawText(HighScore._getRankCoord(this._canvas, position),
+            position.toString(), 'left', HighScore._LEADERBOARD_FONT);
+        this._canvas.drawText(HighScore._getNameCoord(this._canvas, position),
+            entry.name, 'left', HighScore._LEADERBOARD_FONT);
+        this._canvas.drawText(HighScore._getScoreCoord(this._canvas, position),
+            entry.score.toString(), 'right', HighScore._LEADERBOARD_FONT);
       }
     } else {
-      let x = MIDDLE;
-      let y = this._game.height / HEIGHT_SCALE + 140;
-      this._canvas.drawText(new Coordinate(x, y), 'Retrieving Scores...', 'center', '28px Arial');
+      this._canvas.drawText(HighScore._getRetrieveCoord(this._canvas),
+          HighScore._RETRIEVE_TEXT, 'center', HighScore._RETRIEVE_FONT);
     }
-    
-    // Draw back button
-    const butHomeArea = {
-      coord: new Coordinate((this._game.width - BUTTON_WIDTH - 50), 
-          this._game.height - BUTTON_HEIGHT - 50),
-      width: BUTTON_WIDTH,
-      height: BUTTON_HEIGHT,
-    }
-    this._canvas.drawButton(this._clickHandler, this, butHomeArea, 'Home', 
-        HighScore.BUTTONS.HOME, this._backToHome);
   }
   
-  _backToHome() {
-    if (this._backed) return;
-    
+  _backToHome(button) {
     // Prevent this from being activated multiple times
-    this._backed = true;
-    
-    // Deactivate the button
-    Events.off(HighScore.BUTTONS.HOME);
-    
-    // Stop drawing this high score page
-    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
+    button.disable();
     
     // Change state back to home
     Events.dispatch(HighScore.EVENT_TYPES.GOTO_HOME);
@@ -104,7 +154,7 @@ class HighScore {
       if (res.success) {
         this._haveHighScores = true;
         for (let entry of res.scores) {
-          this._scores.push(entry)
+          this._scores.push(entry);
         }
       }
     }).catch((err) => {
@@ -113,10 +163,19 @@ class HighScore {
   }
 }
 
-HighScore.BUTTONS = {
-  HOME: 'button-high-score-home'
-}
-
 HighScore.EVENT_TYPES = {
   GOTO_HOME: 'high-score-goto-home'
 };
+
+HighScore._BUTTON_WIDTH = 100;
+HighScore._BUTTON_HEIGHT = 30;
+HighScore._HEIGHT_SCALE = 5;
+
+HighScore._TITLE_TEXT = 'HEX2048';
+HighScore._TITLE_FONT = '60px Arial';
+HighScore._HS_TEXT = 'High Scores';
+HighScore._HS_FONT = '40px Arial';
+HighScore._RETRIEVE_TEXT = 'Retrieving Scores...';
+HighScore._RETRIEVE_FONT = '28px Arial';
+HighScore._HOME_TEXT = 'Home';
+HighScore._LEADERBOARD_FONT = '20px Arial';

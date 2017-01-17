@@ -7,12 +7,16 @@
  */
 class KeyHandler {
   constructor() {
+    assertParameters(arguments);
+    
     // Attach event listeners.
     Events.on(InputHandler.EVENT_TYPES.KEY, this._key, this);
   }
   
   // Dispatches the corresponding input direction event.
   _key(keyChar) {
+    assertParameters(arguments, String);
+    
     let direction = KeyHandler.KEY_TO_DIRECTION_MAP[keyChar];
     const inputDirection = new InputDirection(direction);
     Events.dispatch(Controller.EVENT_TYPES.INPUT_DIRECTION, inputDirection);

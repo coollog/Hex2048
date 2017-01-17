@@ -3,10 +3,14 @@
  */
 class InputDirection {
   constructor(direction) {
+    assertParameters(arguments, InputDirection.DIRECTIONS);
+    
     this._direction = direction;
   }
   
   get direction() {
+    assertParameters(arguments);
+    
     return this._direction;
   }
 };

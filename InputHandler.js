@@ -4,6 +4,8 @@
 
 class InputHandler {
   constructor(canvas) {
+    assertParameters(arguments, Canvas);
+    
     this._canvas = canvas;
     this._dragging = false;
     
@@ -16,29 +18,41 @@ class InputHandler {
   }
   
   _dragStart(e) {
+    assertParameters(arguments, MouseEvent);
+    
     this._dragging = true;
     this._dispatchMouseEvent(e, InputHandler.EVENT_TYPES.DRAG_START);
   }
   _drag(e) {
+    assertParameters(arguments, MouseEvent);
+    
     if (!this._dragging) return;
     this._dispatchMouseEvent(e, InputHandler.EVENT_TYPES.DRAG);
   }
   _dragEnd(e) {
+    assertParameters(arguments, MouseEvent);
+    
     if (!this._dragging) return;
     this._dragging = false;
     this._dispatchMouseEvent(e, InputHandler.EVENT_TYPES.DRAG_END);
   }
   
   _key(e) {
+    assertParameters(arguments, KeyboardEvent);
+    
     const keyChar = String.fromCharCode(e.keyCode);
     Events.dispatch(InputHandler.EVENT_TYPES.KEY, keyChar);
   }
   
   _click(e) {
+    assertParameters(arguments, MouseEvent);
+    
     this._dispatchMouseEvent(e, InputHandler.EVENT_TYPES.CLICK);
   }
 
   _dispatchMouseEvent(e, eventType) {
+    assertParameters(arguments, MouseEvent, InputHandler.EVENT_TYPES);
+    
     const mousePosition = this._canvas.getMousePosition(e);
     Events.dispatch(eventType, mousePosition);
   }

@@ -190,7 +190,7 @@ PriorityQueue.Node = class {
   constructor(priority, data = new Map()) {
     this._priority = priority;
     this._data = data;
-    this._id = PriorityQueue.Node._NextNodeId ++;
+    this._id = PriorityQueue.Node._nextNodeId ++;
   }
   
   get priority() {
@@ -235,7 +235,7 @@ PriorityQueue.Node = class {
   }
 };
 
-PriorityQueue.Node._NextNodeId = 0;
+PriorityQueue.Node._nextNodeId = 0;
 
 /**
  * DDO for a key-value pair.
@@ -271,7 +271,6 @@ PriorityQueue.KeyMap = class {
   
   // Adds 'nodeId' into the Set for 'key'.
   add(key, nodeId) {
-    if (typeof key === 'undefined') console.log("?????");
     if (!this._keyMap.has(key)) {
       this._keyMap.set(key, new Set());
     }

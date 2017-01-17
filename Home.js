@@ -4,86 +4,109 @@
 // import 'ClickHandler'
 
 class Home {
-  constructor(canvas, game, clickHandler) {
-    this._canvas = canvas;
-    this._game = game;
-    this._clickHandler = clickHandler;
+  constructor(canvas) {
+    assertParameters(arguments, Canvas);
     
-    // Fields to prevent button from being pressed twice
-    this._started = false;
-    this._highScored = false;
+    this._canvas = canvas;
     
     // Bind draw to draw event
     Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this);
+    
+    // Create start and high score buttons
+    const butStartEnv = Home._getStartButtonEnvelope(this._canvas);
+    const butHighScoreEnv = Home._getHighScoreButtonEnvelope(this._canvas);
+
+    this._butStart = new Button(this._canvas, butStartEnv, Home._START_TEXT);
+    this._butHighScore = new Button(
+        this._canvas, butHighScoreEnv, Home._HIGH_SCORES_TEXT);
+    
+    this._butStart.onClick(this._clickStart.bind(this));
+    this._butHighScore.onClick(this._clickHighScores.bind(this));
+  }
+  
+  static get _BUTTON_SIZE() {
+    return new Size(Home._BUTTON_WIDTH, Home._BUTTON_HEIGHT);
+  }
+  
+  static _getStartButtonEnvelope(canvas) {
+    assertParameters(arguments, Canvas);
+    
+    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
+        .translate(new Coordinate(-Home._BUTTON_WIDTH, 0))
+        .scale(1/2, 1/3)
+        .translate(new Coordinate(0, 50));
+        
+    return new Envelope(topLeft, Home._BUTTON_SIZE);
+  }
+  
+  static _getHighScoreButtonEnvelope(canvas) {
+    assertParameters(arguments, Canvas);
+    
+    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
+        .translate(new Coordinate(-Home._BUTTON_WIDTH, 0))
+        .scale(1/2, 1/3)
+        .translate(new Coordinate(0, 90));
+        
+    return new Envelope(topLeft, Home._BUTTON_SIZE);
+  }
+  
+  static _getTitleCoord(canvas) {
+    assertParameters(arguments, Canvas);
+    
+    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
+        .scale(1/2, 1/3);
+        
+    return topLeft;
+  }
+  
+  
+  // Deactivate all events related to this page.
+  remove() {
+    assertParameters(arguments);
+    
+    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
+    this._butStart.remove();
+    this._butHighScore.remove();
   }
   
   _draw() {
-    const BUTTON_WIDTH = 120;
-    const BUTTON_HEIGHT = 30;
+    assertParameters(arguments);
     
     // Draw title
-    const coordTitle = new Coordinate(this._game.width / 2, this._game.height / 3);
-    this._canvas.drawText(coordTitle, 'HEX2048', 'center', '60px Arial');
-    
-    // Draw start button
-    let coord = new Coordinate((this._game.width - BUTTON_WIDTH) / 2, 
-          this._game.height / 3 + 50);
-    let width = BUTTON_WIDTH;
-    let height = BUTTON_HEIGHT;
-
-    let butStart = new Button(this._canvas, coord, width, height,
-        'Start', this._clickStart);
-    
-    // Draw high score button
-    const butHighScoreArea = {
-      coord: new Coordinate((this._game.width - BUTTON_WIDTH) / 2, 
-          this._game.height / 3 + 90),
-      width: BUTTON_WIDTH,
-      height: BUTTON_HEIGHT,
-    };
-    this._canvas.drawButton(this._clickHandler, this, butHighScoreArea, 'High Scores', 
-        Home.BUTTONS.HIGH_SCORES, this._clickHighScores);
+    const coordTitle = Home._getTitleCoord(this._canvas);
+    this._canvas.drawText(coordTitle, Home._TITLE_TEXT, 'center', Home._TITLE_FONT);
   }
   
-  _clickStart() {
-    if (this._started) return;
-    
+  _clickStart(button) {
+    assertParameters(arguments, Button);
+
     // Prevent this from being activated multiple times
-    this._started = true;
-    
-    // Deactivate the button
-    Events.off(Home.BUTTONS.START);
-    
-    // Stop drawing this home page
-    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
+    button.disable();
     
     // Change the state
     Events.dispatch(Home.EVENT_TYPES.GOTO_STARTING);
   }
   
-  _clickHighScores() {
-    if (this._highScored) return;
+  _clickHighScores(button) {
+    assertParameters(arguments, Button);
     
     // Prevent this from being activated multiple times
-    this._highScored = true;
-    
-    // Deactivate the button
-    Events.off(Home.BUTTONS.HIGH_SCORES);
-    
-    // Stop drawing this home page
-    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
+    button.disable();
     
     // Change the state
     Events.dispatch(Home.EVENT_TYPES.GOTO_HIGH_SCORE);
   }
 }
 
-Home.BUTTONS = {
-  START: 'button-home-start',
-  HIGH_SCORES: 'button-home-high-score'
-};
-
 Home.EVENT_TYPES = {
   GOTO_STARTING: 'home-goto-starting',
   GOTO_HIGH_SCORE: 'home-goto-high-score'
 };
+
+Home._BUTTON_WIDTH = 120;
+Home._BUTTON_HEIGHT = 30;
+
+Home._TITLE_TEXT = 'HEX2048';
+Home._TITLE_FONT = '60px Arial';
+Home._START_TEXT = 'Start';
+Home._HIGH_SCORES_TEXT = 'High Scores';

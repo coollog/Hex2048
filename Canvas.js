@@ -6,48 +6,70 @@
 class Canvas {
   // 'canvasId' is the HTML DOM element id of the canvas.
   constructor(canvasId) {
+    assertParameters(arguments, String);
+    
     this._canvas = document.getElementById(canvasId);
     this._context = this._canvas.getContext('2d');
   }
   
+  get width() {
+    return this._canvas.width;
+  }
+  get height() {
+    return this._canvas.height;
+  }
+  
   // Alias for DOM addEventListener.
   listen() {
+    assertParameters(arguments, undefined);
     this._canvas.addEventListener(...arguments);
   }
   
   // Clears the context.
   clear() {
+    assertParameters(arguments);
+    
     this._context.clearRect(0, 0, this._canvas.width, this._canvas.height);
   }
   
   // Draw line from 'startCoord' to 'endCoord'.
   drawLine(startCoord, endCoord) {
+    assertParameters(arguments, Coordinate, Coordinate);
+    
     this._context.beginPath();
     this._context.moveTo(...startCoord.toArray());
     this._context.lineTo(...endCoord.toArray());
     this._context.stroke();
   }
   
-  // Draw a stroke rectangle with coord = top left corner
-  drawStrokeRect(coord, width, height) {
-    this._context.strokeRect(coord.x, coord.y, width, height);
+  // Draw a stroke rectangle with coord = top left corner.
+  drawRectangle(envelope) {
+    assertParameters(arguments, Envelope);
+    
+    this._context.strokeRect(
+        ...envelope.topLeft.toArray(), ...envelope.size.toArray());
   }
   
-  // Draw polygon shape (will apply color and stroke)
+  // Draw polygon shape (will apply color and stroke).
   drawPolygon(coords, color) {
+    assertParameters(arguments, Array, String);
+    
     this._context.beginPath();
     this._context.moveTo(...coords[0].toArray());
-    for (let i = 1; i < coords.length; i++) {
-      this._context.lineTo(...coords[i].toArray());
+    for (let coord of coords) {
+      this._context.lineTo(...coord.toArray());
     }
-    this._context.lineTo(...coords[0].toArray()); // To close the shape
+    this._context.lineTo(...coords[0].toArray()); // To close the shape.
     this._context.closePath();
     this._context.fillStyle = color;
     this._context.fill();
   }
   
-  // Draw text centered at coord
+  // Draw text centered at coord.
   drawText(coord, text, textAlign, font, color = 'black') {
+    assertParameters(
+        arguments, Coordinate, String, String, String, [String, undefined]);
+    
     this._context.font = font;
     this._context.fillStyle = color;
     this._context.textAlign = textAlign;
@@ -58,6 +80,9 @@ class Canvas {
   // Draw 'img' at 'destCoord', rotated by 'angle', scaled by 'scaleX' and
   // 'scaleY', with origin at 'originCoord'.
   drawImage(img, destCoord, originCoord, angle, scaleX, scaleY) {
+    assertParameters(arguments, HTMLImageElement, Coordinate, Coordinate, 
+        Number, Number, Number);
+        
     this._context.save();
     this._context.translate(...destCoord.toArray());
     this._context.scale(scaleX, scaleY);
@@ -67,39 +92,17 @@ class Canvas {
     this._context.restore();
   }
   
-  // Draw a button and text inside.  Parameters:
-  //  clickHandler - clickHandler so button event can be registered
-  //  owner - handler of the event to be added
-  //  area - {coord: top left corner, width: width, height: height}
-  //  text - text to be displayed in button
-  //  button - unique button name/id
-  //  callBackFunc - function to be called when button clicked
-  drawButton(clickHandler, owner, area, text, button, callBackFunc) {
-    this.drawStrokeRect(area.coord, area.width, area.height);
-    
-    let center = new Coordinate(area.coord.x + area.width / 2,
-        area.coord.y + area.height / 2);
-    this.drawText(center, text, 'center', '20px Arial');
-    
-    clickHandler.registerArea(area, button);
-    Events.on(button, callBackFunc, owner);
-  }
-
-  drawButton2(area, text) {
-    this.drawStrokeRect(area.coord, area.width, area.height);
-    
-    let center = new Coordinate(area.coord.x + area.width / 2,
-        area.coord.y + area.height / 2);
-    this.drawText(center, text, 'center', '20px Arial');
-  }
-  
   drawWithOpacity(opacity, drawFn) {
+    assertParameters(arguments, Number, Function);
+    
     this._context.globalAlpha = opacity;
     drawFn();
     this._context.globalAlpha = 1.0;
   }
   
   drawWithShadow(size, color, drawFn) {
+    assertParameters(arguments, Number, String, Function);
+    
     this._context.save();
     this._context.shadowBlur = size;
     this._context.shadowColor = color;
@@ -108,6 +111,8 @@ class Canvas {
   }
   
   getMousePosition(e) {
+    assertParameters(arguments, MouseEvent);
+    
     const canvasRect = this._canvas.getBoundingClientRect();
     const x =
         (e.clientX - canvasRect.left) / canvasRect.width *

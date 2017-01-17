@@ -4,6 +4,8 @@
 
 class Board {
   constructor(canvas, center, numPerEdge, radius) {
+    assertParameters(arguments, Canvas, Coordinate, Number, Number);
+    
     this._canvas = canvas;
     this._center = center;
     this._numPerEdge = numPerEdge;
@@ -32,6 +34,8 @@ class Board {
   
   // Converts row,col indices to an XY coordinate.
   indexToXY(row, col) {
+    assertParameters(arguments, Number, Number);
+    
     // Put origin at center.
     row = row - this._numPerEdge + 1;
     col = col - this._numPerEdge + 1;
@@ -47,6 +51,8 @@ class Board {
 
   // Create all of the hexagon shapes
   createAll() {
+    assertParameters(arguments);
+    
     for (let col = 0; col < this._width; col ++) {
       for (let row = 0; row < this._width; row ++) {
         // Create each hexagon.
@@ -66,11 +72,14 @@ class Board {
   
   // Collapse towards dir; returned is an object with two fields:
   // - changed: whether or there was a hexagon that was changed
+  // TODO: Change this to a separate class.
   // - result: a 2d array of:
   //    {before: the value in this hexagon before collapse,
   //     after:  the value in this hexagon after collapse,
   //     change: the (row,col) this hexagon moved to}
   collapse(dir) {
+    assertParameters(arguments, Number);
+    
     // This will state whether or not a hexagon was changed
     let changed = false;
     
@@ -156,18 +165,18 @@ class Board {
         var iH = this.hexagons[indicesInLine[i][0]][indicesInLine[i][1]];
         var jH = this.hexagons[indicesInLine[j][0]][indicesInLine[j][1]];
         
-        if (iH.text == '') {
+        if (iH.text === '') {
           // console.log("this is empty");
           
           i = j;
           j++;
         } else {
-          if (jH.text == '') {
+          if (jH.text === '') {
             // console.log("next is empty");
             
             j++;
           } else {
-            if (iH.text == jH.text) {
+            if (iH.text === jH.text) {
               // console.log("combine this and next");
               
               // Add to score if two blocks are combined
@@ -252,6 +261,8 @@ class Board {
   
   // Find an empty block and put a 2 or 4 in it
   addRandom() {
+    assertParameters(arguments);
+    
     while (true) {
       let col = Math.floor(Math.random() * (this._width));
       let row = Math.floor(Math.random() * (this._width));
@@ -279,36 +290,39 @@ class Board {
   
   // Return true if player lost
   lost() {
+    assertParameters(arguments);
+    
     if (--this._maxMoves <= 0) return true;
     
-    if (this._isFilled()) {
-      let cantMove = true;
+    if (!this._isFilled()) return false;
+  
+    for (let dir = 0; dir < 6; dir++) {
+      const result = this.collapse(dir);
       
-      let result;
-      for (let dir = 0; dir < 6; dir++) {
-        result = this.collapse(dir);
-        
-        // If collapsing in a direction changes board, then it means can move
-        cantMove = cantMove && !result.changed
-      }
-      
-      return cantMove;
-    } else {
-      return false;
+      // If collapsing in a direction changes board, then it means can move
+      if (result.changed) return false;
     }
+    
+    return true;
   }
   
   // Draw all of the hexagon shapes and their text; draw score
   _drawAll() {
+    assertParameters(arguments);
+    
     this._drawScore();
   }
   
   _drawScore() {
-    this._canvas.drawText(new Coordinate(10, 15), this._score, 'left', '30px Arial');
+    assertParameters(arguments);
+    
+    this._canvas.drawText(Board._SCORE_COORD, this._score.toString(), 'left', '30px Arial');
   }
   
   // Define the iterator values (should only be called once in constructor)
   _defineIters() {
+    assertParameters(arguments);
+    
     let ITER_TOP_RIGHT = {
       start:  {col: 0,                          row: this._numPerEdge - 1},
       first:  {col: 0,                          row: 1},
@@ -357,6 +371,8 @@ class Board {
   
   // Find starting indices
   _findStartingIndices(dir) {
+    assertParameters(arguments, Number);
+    
     let iter = this._iters[dir];
     
     let indices = [];
@@ -379,23 +395,22 @@ class Board {
   
   // If all the hexagons are filled with numbers
   _isFilled() {
-    let filled = true;
+    assertParameters(arguments);
     
-    for (let horiz = 0; horiz < this.hexagons.length; horiz++) {
-      for (let vert = 0; vert < this.hexagons[horiz].length; vert++) {
-        let hexagon = this.hexagons[horiz][vert];
-        if (hexagon != undefined) {
-          filled = filled && (hexagon.text != '');
-        }
+    for (let row of this.hexagons) {
+      for (let hexagon of row) {
+        if (hexagon !== undefined && hexagon.text === '') return false;
       }
     }
     
-    return filled;
+    return true;
   }
   
   
   // Returns true if (row, col) is a valid hexagon position.
   _isIndexInside(row, col) {
+    assertParameters(arguments, Number, Number);
+    
     const half = this._numPerEdge - 1;
     const colStart = 0;
     const colEnd = this._width;
@@ -406,7 +421,11 @@ class Board {
   
   // Calculates the number of hexagons in the column 'col'.
   _verticalLength(col) {
+    assertParameters(arguments, Number);
+    
     const half = this._numPerEdge - 1;
     return 2 * half - Math.abs(half - col) + 1;
   }
 };
+
+Board._SCORE_COORD = new Coordinate(10, 15);

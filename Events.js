@@ -9,6 +9,8 @@ class Events {
   // Handlers are called in the priority-order (lowest first), then insertion
   // order.
   static on(eventType, handler, owner, priority = 1) {
+    assertParameters(arguments, String, Function, Object, [Number, undefined]);
+    
     // Create a new priority queue from owner to handlers if the eventType is new.
     if (!(eventType in Events._events)) {
       Events._events[eventType] = new PriorityQueue();
@@ -26,6 +28,8 @@ class Events {
 
   // Detach any handlers from event of type 'eventType' for 'owner'.
   static off(eventType, owner = null) {
+    assertParameters(arguments, String, [Object, undefined]);
+    
     if (owner === null) {
       delete Events._events[eventType];
     } else {
@@ -35,10 +39,11 @@ class Events {
 
   // Dispatch an event with type 'eventType' containing data '...data'.
   static dispatch(eventType, ...data) {
+    assertParameters(arguments, undefined);
+    
     if (!(eventType in Events._events)) return;
 
     const ownerHandlersPQ = Events._events[eventType];
-    // console.log(ownerHandlersPQ);
     for (let keyValue of ownerHandlersPQ) {
       const owner = keyValue.key;
       const handlers = keyValue.value;

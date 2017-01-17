@@ -6,11 +6,8 @@
  * Controls the state of the game.
  */
 class Controller {
-  constructor(game, drawTimer, gestureHandler, clickHandler) {
-    this._game = game;
-    this._drawTimer = drawTimer;
-    this._gestureHandler = gestureHandler;
-    this._clickHandler = clickHandler;
+  constructor() {
+    assertParameters(arguments);
     
     // this.state = new Controller.StartingState();
     this.state = new Controller.HomeState();
@@ -20,24 +17,34 @@ class Controller {
     Events.on(DrawTimer.EVENT_TYPES.DRAW, this._step, this, 0);
   }
   
+  // TODO: Board should live with the corresponding states, NOT in Controller.
   get board() {
     return this._board;
   }
   set board(board) {
+    assertParameters(arguments, Board);
+    
     this._board = board;
   }
   
   set state(newState) {
+    assertParameters(arguments, Controller.State);
+    
+    if (this._state) this._state.finish();
     this._state = newState;
     newState.controller = this;
   }
   
   // Handles an input direction.
   _input(direction) {
+    assertParameters(arguments, InputDirection);
+    
     this._state.handleInput(direction);
   }
   
   _step() {
+    assertParameters(arguments);
+    
     this._state.step();
   }
 }
@@ -60,12 +67,14 @@ Controller.EVENT_TYPES = {
  * Extend this class to implement new states.
  *  handleInput - handles an InputDirection.
  *  step - runs every draw step.
+ *  finish - runs when the state is changed.
  *  _controllerReady - runs when the state is attached to the Controller.
  */
 Controller.State = class {
-  constructor(type, controller) {
+  constructor(type) {
+    assertParameters(arguments, Controller.STATES);
+    
     this._type = type;
-    this._controller = controller;
   }
   
   get type() {
@@ -73,20 +82,34 @@ Controller.State = class {
   }
   
   set controller(controller) {
+    assertParameters(arguments, Controller);
+    
     this._controller = controller;
     
     this._controllerReady();
   }
   
   handleInput(direction) {
+    assertParameters(arguments, InputDirection);
+    
     // Do nothing by default.
   }
   
   step() {
+    assertParameters(arguments);
+    
+    // Do nothing by default.
+  }
+  
+  finish() {
+    assertParameters(arguments);
+    
     // Do nothing by default.
   }
   
   _controllerReady() {
+    assertParameters(arguments);
+    
     // Do nothing by default.
   }
 };
@@ -96,25 +119,30 @@ Controller.State = class {
  */
 Controller.StartingState = class extends Controller.State {
   constructor() {
+    assertParameters(arguments);
+    
     super(Controller.STATES.STARTING);
   }
   
   _controllerReady() {
+    assertParameters(arguments);
+    
     const board = new Board(canvas, new Coordinate(340, 340), 4, 50);
-    // Start drawing the board
+    // Start drawing the board.
     board.createAll();
     
-    // Generate a new board
+    // Generate a new board.
+    // TODO: Move into board. Call it initRandom().
     for (let i = 0; i < 30; i ++) {
       board.addRandom();
     }
     
     this._controller.board = board;
     
-    this._controller.state = new Controller.ReadyState();
+    // Enable gesture drawing.
+    Events.dispatch(GestureHandler.EVENT_TYPES.ON);
     
-    // Enable gesture drawing
-    this._controller._gestureHandler.drawOn = true;
+    this._controller.state = new Controller.ReadyState();
   }
 };
 
@@ -123,10 +151,14 @@ Controller.StartingState = class extends Controller.State {
  */
 Controller.ReadyState = class extends Controller.State {
   constructor() {
+    assertParameters(arguments);
+    
     super(Controller.STATES.READY);
   }
   
   handleInput(direction) {
+    assertParameters(arguments, InputDirection);
+    
     // Start animating the board toward the input direction.
     let collapsed = this._controller.board.collapse(direction.direction);
     
@@ -141,6 +173,8 @@ Controller.ReadyState = class extends Controller.State {
  */
 Controller.AnimatingState = class extends Controller.State {
   constructor(collapsedResult) {
+    assertParameters(arguments, Object);
+    
     super(Controller.STATES.ANIMATING);
     
     this._collapsedResult = collapsedResult;
@@ -151,8 +185,10 @@ Controller.AnimatingState = class extends Controller.State {
   
   // Animates the board toward the collapsed result.
   step() {
+    assertParameters(arguments);
+    
     if (this._animated === Controller.AnimatingState.ANIMATE_MAX) {
-      this._finish();
+      this._animationFinished();
     } else {
       this._animated ++;
       this._updateAnimatingHexagons();
@@ -160,10 +196,14 @@ Controller.AnimatingState = class extends Controller.State {
   }
   
   _controllerReady() {
+    assertParameters(arguments);
+    
     this._createAnimatingHexagons();
   }
   
   _createAnimatingHexagons() {
+    assertParameters(arguments);
+    
     this._hexagons = [];
     
     for (let row = 0; row < this._collapsedResult.length; row ++) {
@@ -198,12 +238,16 @@ Controller.AnimatingState = class extends Controller.State {
   }
   
   _updateAnimatingHexagons() {
+    assertParameters(arguments);
+    
     for (let hexagon of this._hexagons) {
       hexagon.animate(this._animated / Controller.AnimatingState.ANIMATE_MAX);
     }
   }
   
-  _finish() {
+  _animationFinished() {
+    assertParameters(arguments);
+    
     // Delete all animating hexagons.
     for (let hexagon of this._hexagons) {
       hexagon.delete();
@@ -226,7 +270,7 @@ Controller.AnimatingState = class extends Controller.State {
     // Check if lost 
     if (this._controller.board.lost()) {
       // Disable gesture drawing
-      this._controller._gestureHandler.drawOn = false;
+      Events.dispatch(GestureHandler.EVENT_TYPES.OFF);
 
       this._controller.state = new Controller.LostState();
     } else {
@@ -243,24 +287,38 @@ Controller.AnimatingState.ANIMATE_MAX = 15;
  */
 Controller.HomeState = class extends Controller.State {
   constructor() {
-    super(Controller.STATES.HOME);
+    assertParameters(arguments);
     
-    Events.on(Home.EVENT_TYPES.GOTO_STARTING, this._start, this);
-    Events.on(Home.EVENT_TYPES.GOTO_HIGH_SCORE, this._highScores, this);
+    super(Controller.STATES.HOME);
+  }
+  
+  finish() {
+    assertParameters(arguments);
+    
+    this._home.remove();
+    Events.off(Home.EVENT_TYPES.GOTO_STARTING, this);
+    Events.off(Home.EVENT_TYPES.GOTO_HIGH_SCORE, this);
   }
   
   _controllerReady() {    
-    let controller = this._controller;
-    const home = new Home(canvas, controller._game, controller._clickHandler);
+    assertParameters(arguments);
+
+    this._home = new Home(canvas);
+    Events.on(Home.EVENT_TYPES.GOTO_STARTING, this._start, this);
+    Events.on(Home.EVENT_TYPES.GOTO_HIGH_SCORE, this._highScores, this);
   }
 
   // Change state to start
   _start() {
+    assertParameters(arguments);
+    
     this._controller.state = new Controller.StartingState();
   }
     
     // Change state to high scores
   _highScores() {
+    assertParameters(arguments);
+    
     this._controller.state = new Controller.HighScoreState();
   }
 };
@@ -270,19 +328,26 @@ Controller.HomeState = class extends Controller.State {
  */
 Controller.HighScoreState = class extends Controller.State {
   constructor() {
+    assertParameters(arguments);
+    
     super(Controller.STATES.HIGH_SCORE);
 
     Events.on(HighScore.EVENT_TYPES.GOTO_HOME, this._backToHome, this);
   }
   
   _controllerReady() {
-    let controller = this._controller;
-    const highScore = new HighScore(canvas, controller._game,
-        controller._clickHandler);
+    assertParameters(arguments);
+  
+    this._highScore = new HighScore(canvas, this._controller._game);
   }
 
   // Change state back to home
   _backToHome() {
+    assertParameters(arguments);
+    
+    this._highScore.remove();
+    
+    Events.off(HighScore.EVENT_TYPES.GOTO_HOME, this);
     this._controller.state = new Controller.HomeState();
   }
 };
@@ -292,13 +357,24 @@ Controller.HighScoreState = class extends Controller.State {
  */
 Controller.LostState = class extends Controller.State {
   constructor() {
+    assertParameters(arguments);
+    
     super(Controller.STATES.LOST);
   }
   
+  finish() {
+    assertParameters(arguments);
+    
+    this._lost.remove();
+    
+    Events.off(Lost.EVENT_TYPES.GOTO_HIGH_SCORE, this);
+    Events.off(Lost.EVENT_TYPES.GOTO_HOME, this);
+  }
+  
   _controllerReady() {
-    let controller = this._controller;
-    const lost = new Lost(canvas, controller._game, controller._drawTimer,
-        controller.board, controller._clickHandler);
+    assertParameters(arguments);
+    
+    this._lost = new Lost(canvas, this._controller._game, this._controller.board);
     
     Events.on(Lost.EVENT_TYPES.GOTO_HIGH_SCORE, this._highScores, this);
     Events.on(Lost.EVENT_TYPES.GOTO_HOME, this._backToHome, this);
@@ -306,11 +382,15 @@ Controller.LostState = class extends Controller.State {
         
   // Change state back to home
   _backToHome() {
+    assertParameters(arguments);
+    
     this._controller.state = new Controller.HomeState();
   }
   
   // Submitted so display high scores
   _highScores() {
+    assertParameters(arguments);
+    
     this._controller.state = new Controller.HighScoreState();
   }
 };

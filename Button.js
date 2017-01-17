@@ -1,46 +1,54 @@
 // import 'Events'
 // import 'InputHandler',
-// import 'Coordinate'
+// import 'Envelope'
 // import 'Canvas'
 
 class Button {
-	constructor(canvas, coord, width, height, text, handler) {
+	constructor(canvas, envelope, text) {
+	  assertParameters(arguments, Canvas, Envelope, String);
+	  
     this._canvas = canvas
-		this._coord = coord;
-    this._width = width;
-    this._height = height;
+		this._envelope = envelope;
     this._text = text;
-    this._name = name;
-    this._handler = handler;
-
-    // Is this button active (aka can it be clicked)
-    this._active = true;
-    Events.on(InputHandler.EVENT_TYPES.CLICK, this._clicked, this);
+    
+    Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this);
+    this.enable();
 	}
 
-  get active() {
-    return this._active;
+  enable() {
+    Events.on(InputHandler.EVENT_TYPES.CLICK, this._clicked, this);
   }
-  set active(active) {
-    this._active = active;
+  disable() {
+    Events.off(InputHandler.EVENT_TYPES.CLICK, this);
   }
 
+  remove() {
+    assertParameters(arguments);
+    
+    this.disable();
+    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
+  }
+
+  onClick(callBackFunc) {
+    assertParameters(arguments, Function);
+    
+    this._callBackFunc = callBackFunc;
+  }
+  
   _draw() {
-    if (!this._active) return;
-
-    this._canvas.drawButton2(butStartArea, this._text);
+    assertParameters(arguments);
+        
+    this._canvas.drawRectangle(this._envelope);
+    this._canvas.drawText(this._envelope.center, this._text, 'center', '20px Arial');
   }
 
   _clicked(mousePos) {
-    if (!this._active) return;
-
-    const xIn = mousePos.x > this._coord.x && (mousePos.x < this._coord.x + this._width);
-    const yIn = mousePos.y > this._coord.y && (mousePos.y < this._coord.y + this._height);
+    assertParameters(arguments, Coordinate);
     
     // Did not click in the button
-    if (!(xIn && yIn)) return;
+    if (!this._envelope.contains(mousePos)) return;
 
     // Run the handler
-    this._handler();
+    this._callBackFunc(this);
   }
 }

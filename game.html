@@ -14,8 +14,12 @@
   <img id="img-right-arrow" src="assets/right_arrow.png" />
 </assets>
 
+<script src="Assert.js"></script>
+
 <script src="CanvasInput.min.js"></script>
 <script src="Coordinate.js"></script>
+<script src="Size.js"></script>
+<script src="Envelope.js"></script>
 <script src="Easing.js"></script>
 <script src="Hexagon.js"></script>
 <script src="HexagonAnimated.js"></script>
@@ -23,14 +27,13 @@
 <script src="PriorityQueue.js"></script>
 <script src="Events.js"></script>
 <script src="Canvas.js"></script>
-<srcipt src="Button.js"></script>
+<script src="Button.js"></script>
 <script src="DrawTimer.js"></script>
 <script src="Controller.js"></script>
 <script src="InputDirection.js"></script>
 <script src="InputHandler.js"></script>
 <script src="KeyHandler.js"></script>
 <script src="GestureHandler.js"></script>
-<script src="ClickHandler.js"></script>
 <script src="Board.js"></script>
 <script src="Home.js"></script>
 <script src="HighScore.js"></script>
@@ -42,18 +45,15 @@
   };
   const FPS = 60;
 
-  const game = document.getElementById('game'); 
   const canvas = new Canvas('game');
   
-  const inputHandler = new InputHandler(canvas);
-  const keyHandler = new KeyHandler(canvas);
-  const gestureHandler = new GestureHandler(canvas);
-  const clickHandler = new ClickHandler(canvas);
-  const drawTimer = new DrawTimer(canvas, FPS);
+  new InputHandler(canvas);
+  new KeyHandler();
+  new GestureHandler(canvas);
   
-  const controller = new Controller(game, drawTimer, gestureHandler, clickHandler);
+  const controller = new Controller();
   
-  drawTimer.start();
+  (new DrawTimer(canvas, FPS)).start();
 </script>
 
 <br />Testing scores shit:<br />

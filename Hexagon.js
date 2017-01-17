@@ -4,6 +4,8 @@
 class Hexagon {
   // Create a hexagon centered at center and with radius (center to vertex) radius
   constructor(canvas, center, radius) {
+    assertParameters(arguments, Canvas, Coordinate, Number);
+    
     this._canvas = canvas;
     this._center = center;
     this._radius = radius;
@@ -11,24 +13,30 @@ class Hexagon {
     this._color;
     
     this._blinking = false;
-    
-    this._shouldDraw = true;
-    
-    Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this);
+  
+    this.enableDrawing();
   }
   
   startBlink() {
+    assertParameters(arguments);
+    
     this._blinking = 0;
   }
   endBlink() {
+    assertParameters(arguments);
+    
     this._blinking = false;
   }
   
   enableDrawing() {
-    this._shouldDraw = true;
+    assertParameters(arguments);
+    
+    Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this);
   }
   disableDrawing() {
-    this._shouldDraw = false;
+    assertParameters(arguments);
+    
+    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
   }
   
   // Get the text of the hexagon
@@ -38,6 +46,8 @@ class Hexagon {
   
   // Set the text of the hexagon to be text
   set text(text) {
+    assertParameters(arguments, [Number, String]);
+    
     this._text = text;
     
     if (!(text in Hexagon.NUMBER_PROPS)) {
@@ -52,6 +62,8 @@ class Hexagon {
 
   // Draw the actual hexagon shape
   _drawShape() {
+    assertParameters(arguments);
+    
     this._updateBlinking();
     
     const radius = this._calculateRadius();
@@ -67,6 +79,8 @@ class Hexagon {
   }
   
   _calculateRadius() {
+    assertParameters(arguments);
+    
     let radius = this._radius;
     
     if (this._blinking) {
@@ -80,6 +94,8 @@ class Hexagon {
   }
   
   _getCoords(radius = this._calculateRadius()) {
+    assertParameters(arguments, [Number, undefined]);
+    
     const coords = [];
     
     for (let i = 0; i < 6; i ++) {
@@ -101,24 +117,32 @@ class Hexagon {
   
   // Draw the text
   _drawText() {
+    assertParameters(arguments);
+    
     if (!this._shouldDraw) return;
     
     this._canvas.drawText(
-        this._center, this._text, 'center', Hexagon.FONT, this._textColor);
+        this._center, this._text.toString(), 'center', Hexagon.FONT, this._textColor);
   }
 
   _draw() {
+    assertParameters(arguments);
+    
     this._drawShape();
     this._drawText();
   }
   
   _drawWithCoords(coords) {
+    assertParameters(arguments, Array);
+    
     const color = this._shouldDraw ? this._color : 'white';
     
     this._canvas.drawPolygon(coords, color);
   }
   
   _updateBlinking() {
+    assertParameters(arguments);
+    
     if (this._blinking !== false) {
       this._blinking ++;
       if (this._blinking === Hexagon.BLINK_MAX) {

@@ -8,6 +8,8 @@
  */
 class GestureHandler {
   constructor(canvas) {
+    assertParameters(arguments, Canvas);
+    
     this._canvas = canvas;
     this._drawOn = false;
     this._dragging = false;
@@ -18,19 +20,28 @@ class GestureHandler {
     Events.on(InputHandler.EVENT_TYPES.DRAG_END, this._dragEnd, this);
     
     Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this, 100);
+    
+    Events.on(GestureHandler.EVENT_TYPES.ON, this._on, this);
+    Events.on(GestureHandler.EVENT_TYPES.OFF, this._off, this);
   }
   
-  set drawOn(drawOn) {
-    this._drawOn = drawOn;
+  _on() {
+    assertParameters(arguments);
     
-    if (drawOn) {
-      Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this, 100);
-    } else {
-      Events.off(DrawTimer.EVENT_TYPES.DRAW);
-    }
+    this._drawOn = true;
+    Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this, 100);
+  }
+  
+  _off() {
+    assertParameters(arguments);
+    
+    this._drawOn = false
+    Events.off(DrawTimer.EVENT_TYPES.DRAW);
   }
   
   _draw(imgRightArrow = ASSETS.RIGHT_ARROW) {
+    assertParameters(arguments, [HTMLImageElement, undefined]);
+    
     const ARROW_MAX_SCALE = 0.2;
     
     this._canvas.drawWithOpacity(0.5, () => {
@@ -51,15 +62,21 @@ class GestureHandler {
   }
   
   _dragStart(mousePosition) {
+    assertParameters(arguments, Coordinate);
+    
     this._dragging = true;
     this._dragStartCoord = mousePosition;
     this._dragCurrentCoord = mousePosition;
   }
   _drag(mousePosition) {
+    assertParameters(arguments, Coordinate);
+    
     this._dragCurrentCoord = mousePosition;
     this._updateGesture();
   }
   _dragEnd(mousePosition) {
+    assertParameters(arguments, Coordinate);
+    
     this._dragging = false;
     this._dragCurrentCoord = mousePosition;
     if (this._updateGesture()) {
@@ -70,21 +87,29 @@ class GestureHandler {
   
   // Return the distance dragged.
   _dragDistance() {
+    assertParameters(arguments);
+    
     return this._dragStartCoord.distanceTo(this._dragCurrentCoord);
   }
   
   // Return the angle of dragging.
   _dragAngle() {
+    assertParameters(arguments);
+    
     return this._dragStartCoord.angleTo(this._dragCurrentCoord);
   }
   
   // Return true if the dragging is long enough.
   _hasGesture() {
-    return this._dragDistance() >= GestureHandler.DRAG_THRESHOLD;
+    assertParameters(arguments);
+    
+    return this._dragDistance() >= GestureHandler._DRAG_THRESHOLD;
   }
   
   // Updates the gesture index.
   _updateGesture() {
+    assertParameters(arguments);
+    
     // Don't do anything if didn't drag far enough.
     if (!this._hasGesture()) return false;
     
@@ -98,4 +123,9 @@ class GestureHandler {
   }
 }
 
-GestureHandler.DRAG_THRESHOLD = 20;
+GestureHandler.EVENT_TYPES = {
+  ON: 'gesture-handler-on',
+  OFF: 'gesture-handler-off'
+};
+
+GestureHandler._DRAG_THRESHOLD = 20;
