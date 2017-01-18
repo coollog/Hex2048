@@ -1,6 +1,18 @@
 class HighScore {
-  constructor(canvas) {
+  constructor(canvas, name = undefined, rank = undefined) {
+    assertParameters(arguments, Canvas, [String, undefined], [Number, undefined]);
+    
     this._canvas = canvas;
+    this._name = name;
+    this._rank = rank;
+    
+    if (this._name === undefined || this._rank === undefined) {
+      this._name = undefined;
+      this._rank = undefined;
+      this._hasSelf = false;
+    } else {
+      this._hasSelf = true;
+    }
     
     // Get high scores
     this._haveHighScores = false;
@@ -50,32 +62,38 @@ class HighScore {
     return topLeft;
   }
   
-  static _getRankCoord(canvas, position) {
-    assertParameters(arguments, Canvas, Number);
+  static _getRankCoord(canvas, position, hasSelf) {
+    assertParameters(arguments, Canvas, Number, Boolean);
+    
+    const yOffset = 100 + 30 * hasSelf + 30 * position;
     
     const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
         .scale(1/2, 1/HighScore._HEIGHT_SCALE)
-        .translate(new Coordinate(-150, 100 + 30 * position));
+        .translate(new Coordinate(-150, yOffset));
         
     return topLeft;
   }
   
-  static _getNameCoord(canvas, position) {
-    assertParameters(arguments, Canvas, Number);
+  static _getNameCoord(canvas, position, hasSelf) {
+    assertParameters(arguments, Canvas, Number, Boolean);
+    
+    const yOffset = 100 + 30 * hasSelf + 30 * position;
     
     const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
         .scale(1/2, 1/HighScore._HEIGHT_SCALE)
-        .translate(new Coordinate(-110, 100 + 30 * position));
+        .translate(new Coordinate(-110, yOffset));
         
     return topLeft;
   }
   
-  static _getScoreCoord(canvas, position) {
-    assertParameters(arguments, Canvas, Number);
+  static _getScoreCoord(canvas, position, hasSelf) {
+    assertParameters(arguments, Canvas, Number, Boolean);
+    
+    const yOffset = 100 + 30 * hasSelf + 30 * position;
     
     const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
         .scale(1/2, 1/HighScore._HEIGHT_SCALE)
-        .translate(new Coordinate(150, 100 + 30 * position));
+        .translate(new Coordinate(150, yOffset));
         
     return topLeft;
   }
@@ -110,11 +128,14 @@ class HighScore {
       for (let position = 1; position <= this._scores.length; position ++) {
         let entry = this._scores[position - 1];
         
-        this._canvas.drawText(HighScore._getRankCoord(this._canvas, position),
+        this._canvas.drawText(
+            HighScore._getRankCoord(this._canvas, position, this._hasSelf),
             position.toString(), 'left', HighScore._LEADERBOARD_FONT);
-        this._canvas.drawText(HighScore._getNameCoord(this._canvas, position),
+        this._canvas.drawText(
+            HighScore._getNameCoord(this._canvas, position, this._hasSelf),
             entry.name, 'left', HighScore._LEADERBOARD_FONT);
-        this._canvas.drawText(HighScore._getScoreCoord(this._canvas, position),
+        this._canvas.drawText(
+            HighScore._getScoreCoord(this._canvas, position, this._hasSelf),
             entry.score.toString(), 'right', HighScore._LEADERBOARD_FONT);
       }
     } else {
@@ -169,7 +190,7 @@ HighScore.EVENT_TYPES = {
 
 HighScore._BUTTON_WIDTH = 100;
 HighScore._BUTTON_HEIGHT = 30;
-HighScore._HEIGHT_SCALE = 5;
+HighScore._HEIGHT_SCALE = 6;
 
 HighScore._TITLE_TEXT = 'HEX2048';
 HighScore._TITLE_FONT = '60px Arial';

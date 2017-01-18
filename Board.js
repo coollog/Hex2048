@@ -18,6 +18,10 @@ class Board {
     for (let x = 0; x < this._width; x++) {
       this.hexagons.push(new Array(this._width));
     }
+    this.hexagonBackgrounds = [];
+    for (let x = 0; x < this._width; x++) {
+      this.hexagonBackgrounds.push(new Array(this._width));
+    }
     
     this.startingIndices = [];
     
@@ -30,6 +34,16 @@ class Board {
     
     // Todo: Remove; just here to test lost functionality
     this._maxMoves = 3;
+    
+    // Add the buttons
+    const butExitEnv = Board._getExitButtonEnvelope(this._canvas);
+    const butRestartEnv = Board._getRestartButtonEnvelope(this._canvas);
+    
+    this._butExit = new Button(this._canvas, butExitEnv,'Exit');
+    this._butRestart = new Button(this._canvas, butRestartEnv,'Restart');
+    
+    this._butExit.onClick(this._exit.bind(this));
+    this._butRestart.onClick(this._restart.bind(this));
   }
   
   // Converts row,col indices to an XY coordinate.
@@ -65,7 +79,8 @@ class Board {
         this.hexagons[col][row] = hexagon;
         
         // Create background hexagon.
-        new HexagonBackground(this._canvas, xy, this._radius + Hexagon.SPACING);
+        this.hexagonBackgrounds[col][row] =
+            new HexagonBackground(this._canvas, xy, this._radius + Hexagon.SPACING);
       }
     }
   }
@@ -111,6 +126,8 @@ class Board {
       // Note that result.change at iIndices and jIndices (optional) will be 
       //    updated with where the hexagon WILL move to
       function updateCurH(newValue, iIndices, jIndices) {
+        assertParameters(arguments, String, Array, [Array, undefined]);
+        
         curH.after = newValue;
         changed = changed || curH.before !== curH.after;
         
@@ -183,7 +200,7 @@ class Board {
               let doubled = parseInt(iH.text) * 2;
               this._score += doubled;
               
-              updateCurH(doubled, indicesInLine[i], indicesInLine[j]);
+              updateCurH(doubled.toString(), indicesInLine[i], indicesInLine[j]);
 
               // Move i to be the next j (since j and i have already combined)
               j++;
@@ -306,6 +323,52 @@ class Board {
     return true;
   }
   
+  // Deactivate all events related to this page.
+  remove() {
+    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
+    
+    for (let col of this.hexagons) {
+      for (let hexagon of col) {
+        if (hexagon === undefined) continue;
+        
+        hexagon.remove();
+      }
+    }
+    
+    for (let col of this.hexagonBackgrounds) {
+      for (let hexagonBackground of col) {
+        if (hexagonBackground === undefined) continue;
+        
+        hexagonBackground.remove();
+      }
+    }
+    
+    this._butExit.remove();
+    this._butRestart.remove();
+  }
+  
+  static get _BUTTON_SIZE() {
+    return new Size(HighScore._BUTTON_WIDTH, HighScore._BUTTON_HEIGHT);
+  }
+  
+  static _getExitButtonEnvelope(canvas) {
+    assertParameters(arguments, Canvas);
+    
+    const topLeft = (new Size(canvas.width, 0)).toCoordinate()
+        .translate(new Coordinate(-(Board._BUTTON_WIDTH + 5), 5))
+        
+    return new Envelope(topLeft, Board._BUTTON_SIZE);
+  }
+  
+  static _getRestartButtonEnvelope(canvas) {
+    assertParameters(arguments, Canvas);
+    
+    const topLeft = (new Size(canvas.width, 0)).toCoordinate()
+        .translate(new Coordinate(-(Board._BUTTON_WIDTH * 2 + 10), 5))
+        
+    return new Envelope(topLeft, Board._BUTTON_SIZE);
+  }
+  
   // Draw all of the hexagon shapes and their text; draw score
   _drawAll() {
     assertParameters(arguments);
@@ -316,7 +379,7 @@ class Board {
   _drawScore() {
     assertParameters(arguments);
     
-    this._canvas.drawText(Board._SCORE_COORD, this._score.toString(), 'left', '30px Arial');
+    this._canvas.drawText(Board._SCORE_COORD, this._score.toString(), 'left', Board._SCORE_FONT);
   }
   
   // Define the iterator values (should only be called once in constructor)
@@ -426,6 +489,31 @@ class Board {
     const half = this._numPerEdge - 1;
     return 2 * half - Math.abs(half - col) + 1;
   }
+  
+  _exit(button) {
+    // Prevent this from being activated multiple times
+    button.disable();
+    
+    // Go back to home (which will change the state)
+    Events.dispatch(Board.EVENT_TYPES.GOTO_HOME);
+  }
+  
+  _restart(button) {
+    // Prevent this from being activated multiple times
+    button.disable();
+    
+    // Go back to home (which will change the state)
+    Events.dispatch(Board.EVENT_TYPES.GOTO_STARTING);
+  }
 };
 
+Board._BUTTON_WIDTH = 100;
+Board._BUTTON_HEIGHT = 30;
+
 Board._SCORE_COORD = new Coordinate(10, 15);
+Board._SCORE_FONT = '30px Arial';
+
+Board.EVENT_TYPES = {
+  GOTO_HOME: 'board-goto-home',
+  GOTO_STARTING: 'board-goto-starting'
+};

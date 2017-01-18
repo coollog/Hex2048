@@ -13,6 +13,10 @@ class HexagonBackground extends Hexagon {
     Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this, 0);
   }
   
+  disableDrawing() {
+    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
+  }
+  
   _draw() {
     assertParameters(arguments);
     

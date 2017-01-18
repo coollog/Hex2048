@@ -9,6 +9,12 @@ class Coordinate {
     this._y = y;
   }
   
+  static interpolate(coord1, coord2, scale) {
+    assertParameters(arguments, Coordinate, Coordinate, Number);
+    
+    return coord1.translate(coord2.subtract(coord1).scale(scale));
+  }
+  
   get x() {
     return this._x;
   }

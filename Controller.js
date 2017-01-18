@@ -14,7 +14,7 @@ class Controller {
     
     // Attach event handlers.
     Events.on(Controller.EVENT_TYPES.INPUT_DIRECTION, this._input, this);
-    Events.on(DrawTimer.EVENT_TYPES.DRAW, this._step, this, 0);
+    Events.on(DrawTimer.EVENT_TYPES.STEP, this._step, this, 0);
   }
   
   // TODO: Board should live with the corresponding states, NOT in Controller.
@@ -166,6 +166,36 @@ Controller.ReadyState = class extends Controller.State {
     
     this._controller.state = new Controller.AnimatingState(collapsed.result);
   }
+  
+  finish() {
+    Events.off(Board.EVENT_TYPES.GOTO_HOME, this);
+    Events.off(Board.EVENT_TYPES.GOTO_STARTING, this);
+  }
+  
+  _controllerReady() {
+    assertParameters(arguments);
+    
+    Events.on(Board.EVENT_TYPES.GOTO_HOME, this._backToHome, this);
+    Events.on(Board.EVENT_TYPES.GOTO_STARTING, this._backToStarting, this);
+  }
+  
+  // Change state back to home
+  _backToHome() {
+    assertParameters(arguments);
+    
+    this._controller.board.remove();
+    
+    this._controller.state = new Controller.HomeState();
+  }
+  
+  // Change state back to home
+  _backToStarting() {
+    assertParameters(arguments);
+    
+    this._controller.board.remove();
+    
+    this._controller.state = new Controller.StartingState();
+  }
 };
 
 /**
@@ -271,6 +301,7 @@ Controller.AnimatingState = class extends Controller.State {
     if (this._controller.board.lost()) {
       // Disable gesture drawing
       Events.dispatch(GestureHandler.EVENT_TYPES.OFF);
+      this._controller.board.remove();
 
       this._controller.state = new Controller.LostState();
     } else {
@@ -327,18 +358,24 @@ Controller.HomeState = class extends Controller.State {
  * Represents the HIGH SCORE state.
  */
 Controller.HighScoreState = class extends Controller.State {
-  constructor() {
-    assertParameters(arguments);
+  constructor(name = undefined, rank = undefined) {
+    assertParameters(arguments, [String, undefined], [Number, undefined]);
     
     super(Controller.STATES.HIGH_SCORE);
 
-    Events.on(HighScore.EVENT_TYPES.GOTO_HOME, this._backToHome, this);
+    this._name = name;
+    this._rank = rank;
+  }
+  
+  finish() {
+    Events.off(HighScore.EVENT_TYPES.GOTO_HOME, this);
   }
   
   _controllerReady() {
     assertParameters(arguments);
   
-    this._highScore = new HighScore(canvas, this._controller._game);
+    this._highScore = new HighScore(canvas, this._name, this._rank);
+    Events.on(HighScore.EVENT_TYPES.GOTO_HOME, this._backToHome, this);
   }
 
   // Change state back to home
@@ -362,6 +399,10 @@ Controller.LostState = class extends Controller.State {
     super(Controller.STATES.LOST);
   }
   
+  step() {
+    
+  }
+  
   finish() {
     assertParameters(arguments);
     
@@ -374,7 +415,7 @@ Controller.LostState = class extends Controller.State {
   _controllerReady() {
     assertParameters(arguments);
     
-    this._lost = new Lost(canvas, this._controller._game, this._controller.board);
+    this._lost = new Lost(canvas, this._controller.board);
     
     Events.on(Lost.EVENT_TYPES.GOTO_HIGH_SCORE, this._highScores, this);
     Events.on(Lost.EVENT_TYPES.GOTO_HOME, this._backToHome, this);
@@ -388,9 +429,12 @@ Controller.LostState = class extends Controller.State {
   }
   
   // Submitted so display high scores
-  _highScores() {
-    assertParameters(arguments);
+  _highScores(data = undefined) {
+    assertParameters(arguments, [Array, undefined]);
     
-    this._controller.state = new Controller.HighScoreState();
+    const name = (data === undefined) ? undefined : data[0];
+    const rank = (data === undefined) ? undefined : data[1];
+    
+    this._controller.state = new Controller.HighScoreState(name, rank);
   }
 };

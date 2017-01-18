@@ -10,7 +10,6 @@ class DrawTimer {
     
     this._canvas = canvas;
     this._interval = 1000 / fps;
-    this._timer;
     
     Events.on(DrawTimer.EVENT_TYPES.START, this.start, this);
     Events.on(DrawTimer.EVENT_TYPES.STOP, this.stop, this);
@@ -19,13 +18,18 @@ class DrawTimer {
   start() {
     assertParameters(arguments);
     
-    this._timer = setInterval(this._draw.bind(this), this._interval);
+    if (!this._timer) {
+      this._timer = setInterval(this._draw.bind(this), this._interval);
+    }
   }
   
   stop() {
     assertParameters(arguments);
     
-    clearInterval(this._timer);
+    if (this._timer) {
+      clearInterval(this._timer);
+      this._timer = undefined;
+    }
   }
   
   _draw() {
@@ -34,10 +38,12 @@ class DrawTimer {
     this._canvas.clear();
     
     Events.dispatch(DrawTimer.EVENT_TYPES.DRAW);
+    Events.dispatch(DrawTimer.EVENT_TYPES.STEP);
   }
 };
 
 DrawTimer.EVENT_TYPES = {
+  STEP: 'drawtimer-step',
   DRAW: 'drawtimer-draw',
   START: 'drawtimer-start',
   STOP: 'drawtimer-stop'

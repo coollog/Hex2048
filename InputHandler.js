@@ -15,6 +15,7 @@ class InputHandler {
     canvas.listen('mouseup', this._dragEnd.bind(this));
     canvas.listen('keydown', this._key.bind(this));
     canvas.listen('click', this._click.bind(this));
+    canvas.listen('mousemove', this._hover.bind(this));
   }
   
   _dragStart(e) {
@@ -49,6 +50,12 @@ class InputHandler {
     
     this._dispatchMouseEvent(e, InputHandler.EVENT_TYPES.CLICK);
   }
+  
+  _hover(e) {
+    assertParameters(arguments, MouseEvent);
+    
+    this._dispatchMouseEvent(e, InputHandler.EVENT_TYPES.HOVER);
+  }
 
   _dispatchMouseEvent(e, eventType) {
     assertParameters(arguments, MouseEvent, InputHandler.EVENT_TYPES);
@@ -63,5 +70,6 @@ InputHandler.EVENT_TYPES = {
   DRAG: 'input-drag',
   DRAG_END: 'input-dragend',
   KEY: 'input-key',
-  CLICK: 'input-click'
+  CLICK: 'input-click',
+  HOVER: 'input-hover'
 };

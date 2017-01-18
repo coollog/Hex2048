@@ -17,6 +17,8 @@ class KeyHandler {
   _key(keyChar) {
     assertParameters(arguments, String);
     
+    if (!(keyChar in KeyHandler.KEY_TO_DIRECTION_MAP)) return;
+    
     let direction = KeyHandler.KEY_TO_DIRECTION_MAP[keyChar];
     const inputDirection = new InputDirection(direction);
     Events.dispatch(Controller.EVENT_TYPES.INPUT_DIRECTION, inputDirection);

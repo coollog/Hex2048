@@ -1,5 +1,6 @@
 // import 'Easing'
 // import 'Hexagon'
+// import 'Transition'
 
 /**
  * Represents an animated hexagon.
@@ -10,8 +11,8 @@ class HexagonAnimated extends Hexagon {
     
     super(canvas, centerStart, radius);
     
-    this._centerStart = centerStart;
-    this._centerEnd = centerEnd;
+    this._centerTransition = new Transition(
+        centerStart, centerEnd, 1, Easing.CubicOut, Coordinate.interpolate);
     
     Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
     Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this, zIndex);
@@ -21,9 +22,8 @@ class HexagonAnimated extends Hexagon {
   animate(scale) {
     assertParameters(arguments, Number);
     
-    scale = Easing.CubicOut(scale);
-    const diff = this._centerEnd.subtract(this._centerStart);
-    this._center = this._centerStart.translate(diff.scale(scale));
+    this._centerTransition.scale(scale);
+    this._center = this._centerTransition.value;
   }
   
   delete() {

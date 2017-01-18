@@ -12,9 +12,11 @@ class Hexagon {
     this._text = '';
     this._color;
     
+    this._shouldDraw = true;
+    
     this._blinking = false;
   
-    this.enableDrawing();
+    Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this);
   }
   
   startBlink() {
@@ -31,11 +33,15 @@ class Hexagon {
   enableDrawing() {
     assertParameters(arguments);
     
-    Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this);
+    this._shouldDraw = true;
   }
   disableDrawing() {
     assertParameters(arguments);
     
+    this._shouldDraw = false;
+  }
+  
+  remove() {
     Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
   }
   

@@ -36,7 +36,7 @@ class GestureHandler {
     assertParameters(arguments);
     
     this._drawOn = false
-    Events.off(DrawTimer.EVENT_TYPES.DRAW);
+    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
   }
   
   _draw(imgRightArrow = ASSETS.RIGHT_ARROW) {

@@ -19,6 +19,10 @@ class Canvas {
     return this._canvas.height;
   }
   
+  get element() {
+    return this._canvas;
+  }
+  
   // Alias for DOM addEventListener.
   listen() {
     assertParameters(arguments, undefined);

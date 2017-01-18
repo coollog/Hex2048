@@ -33,6 +33,8 @@ class Events {
     if (owner === null) {
       delete Events._events[eventType];
     } else {
+      if (!(eventType in Events._events)) return;
+      
       Events._events[eventType].removeKey(owner);
     }
   }

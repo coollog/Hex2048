@@ -1,10 +1,23 @@
 class Lost {
   constructor(canvas, board) {
+    assertParameters(arguments, Canvas, Board);
+    
     this._canvas = canvas;
     this._board = board;
     
     // Bind draw to draw event
     Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this);
+    
+    // Add in text input for name
+    const nameInputEnv = Lost._getNameInputEnvelope(this._canvas);
+    this._input = new CanvasInput({
+      canvas: this._canvas.element,
+      x: nameInputEnv.topLeft.x,
+      y: nameInputEnv.topLeft.y,
+      width: nameInputEnv.size.width,
+      height: nameInputEnv.size.height,
+      placeHolder: 'Name'
+    });
     
     const butBackToHomeEnv = Lost._getBackToHomeButtonEnvelope(this._canvas);
     const butSubmitEnv = Lost._getSubmitButtonEnvelope(this._canvas);
@@ -25,7 +38,7 @@ class Lost {
     
     const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
         .translate(new Coordinate(-(HighScore._BUTTON_WIDTH + 50), 0))
-        .translate(new Coordinate(0, -(HighScore.BUTTON_HEIGHT + 50)));
+        .translate(new Coordinate(0, -(HighScore._BUTTON_HEIGHT + 50)));
         
     return new Envelope(topLeft, HighScore._BUTTON_SIZE);
   }
@@ -45,10 +58,10 @@ class Lost {
     
     const size = new Size(Lost._INPUT_WIDTH, Lost._INPUT_HEIGHT);    
     const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
-        .scale(1, 1/Lost._HEIGHT_SCALE)
-        .translate(new Coordinate(Lost._INPUT_WIDTH, 130));
+        .scale(1/2, 1/Lost._HEIGHT_SCALE)
+        .translate(new Coordinate(-Lost._INPUT_WIDTH, 130));
     
-    return new Envelope(size, topLeft);
+    return new Envelope(topLeft, size);
   }
   
   static _getTitleCoord(canvas) {
@@ -64,9 +77,28 @@ class Lost {
     assertParameters(arguments, Canvas);
     
     const topLeft = Lost._getTitleCoord(canvas)
-        .translate(0, 90);
+        .translate(new Coordinate(0, 90));
         
     return topLeft;
+  }
+  
+  static _getSubmittedCoord(canvas) {
+    assertParameters(arguments, Canvas);
+    
+    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
+        .scale(1/2, 1/Lost._HEIGHT_SCALE)
+        .translate(new Coordinate(0, 140));
+        
+    return topLeft;
+  }
+  
+  // Deactivate all events related to this page.
+  remove() {
+    this._input.destroy();
+    
+    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
+    if (this._butBackToHome) this._butBackToHome.remove();
+    if (this._butSubmit) this._butSubmit.remove();
   }
   
   _draw() {
@@ -78,24 +110,23 @@ class Lost {
     this._canvas.drawText(Lost._getHSCoord(this._canvas), 
         ('Your Score: ' + this._board.score), 'center', '40px Arial');
     
-    // Add in text input for name
-    const NameInputEnv = Lost._getNameInputEnvelope(this._canvas);
-    this._input = new CanvasInput({
-      canvas: this._canvas,
-      x: NameInputEnv.topLeft.x,
-      y: NameInputEnv.topLeft.y,
-      width: NameInputEnv.size.width,
-      height: NameInputEnv.size.height,
-      placeHolder: 'Name'
-    });
-    
-    // Need to disable further drawing or else input will not work
-    Events.dispatch(DrawTimer.EVENT_TYPES.STOP);
+    if (!this._submitting && !this._backing) {
+      this._input.render();
+    } else if (this._submitting) {
+      // Shouldn't display the submit button anymore
+      this._butSubmit.remove();
+      
+      this._canvas.drawText(Lost._getSubmittedCoord(this._canvas),
+          Lost._SUBMITTED_TEXT, 'center', Lost._SUBMITTED_FONT);
+    }
   }
   
   _submit(button) {
     // Prevent this from being activated multiple times
     button.disable();
+    
+    // Express that data is being submitted
+    this._submitting = true;
     
     const data = {
       name: this._input.value(),
@@ -104,9 +135,6 @@ class Lost {
 
     // Make sure an actual name was inputted
     if (data.name === '') return;
-
-    // Restart the drawTimer
-    Events.dispatch(DrawTimer.EVENT_TYPES.START);
     
     HighScore.callLambda('addScore', data).then((res) => {
       if (res.success) {
@@ -115,7 +143,7 @@ class Lost {
             console.log(res.rank);
             
             // Go to high scores
-            Events.dispatch(Lost.EVENT_TYPES.GOTO_HIGH_SCORE);
+            Events.dispatch(Lost.EVENT_TYPES.GOTO_HIGH_SCORE, [data.name, res.rank]);
           }
         });
       }
@@ -128,21 +156,11 @@ class Lost {
     // Prevent this from being activated multiple times
     button.disable();
     
-    // Stop drawing this page
-    this._deactivateEvents();
-    
-    // Restart the drawTimer
-    Events.dispatch(DrawTimer.EVENT_TYPES.START);
+    // Express that user is going back to home
+    this._backing = true;
 
     // Go back to home (which will change the state)
     Events.dispatch(Lost.EVENT_TYPES.GOTO_HOME);
-  }
-  
-  // Deactivate all events related to this page
-  _deactivateEvents() {
-    Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
-    this._butBackToHome.remove();
-    this._butSubmit.remove();
   }
 }
 
@@ -156,3 +174,6 @@ Lost._BUTTON_HEIGHT = 38;
 Lost._INPUT_WIDTH = 150;
 Lost._INPUT_HEIGHT = 25;
 Lost._HEIGHT_SCALE = 4;
+
+Lost._SUBMITTED_TEXT = 'Submitting...';
+Lost._SUBMITTED_FONT = '28px Arial';

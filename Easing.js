@@ -3,6 +3,10 @@
  * All functions should be from (0, 0) to (1, 1).
  */
 const Easing = {
+  Linear(scale) {
+    return scale;
+  },
+  
   CubicOut(scale) {
     assertParameters(arguments, Number);
     
