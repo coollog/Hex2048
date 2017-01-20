@@ -17,6 +17,8 @@ class HighScore {
     // Get high scores
     this._haveHighScores = false;
     this._scores = [];
+    
+    // Retrieve it once in the constructor
     this._getHighScores();
     
     // Bind draw to draw event
@@ -62,40 +64,22 @@ class HighScore {
     return topLeft;
   }
   
-  static _getRankCoord(canvas, position, hasSelf) {
+  static _getRowCoords(canvas, position, hasSelf) {
     assertParameters(arguments, Canvas, Number, Boolean);
     
+    const xOffsets = [-150, -110, 150];
     const yOffset = 100 + 30 * hasSelf + 30 * position;
+    let topLefts = [];
     
-    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
+    for (let offset of xOffsets) {
+      topLefts.push(
+        (new Size(canvas.width, canvas.height)).toCoordinate()
         .scale(1/2, 1/HighScore._HEIGHT_SCALE)
-        .translate(new Coordinate(-150, yOffset));
-        
-    return topLeft;
-  }
-  
-  static _getNameCoord(canvas, position, hasSelf) {
-    assertParameters(arguments, Canvas, Number, Boolean);
+        .translate(new Coordinate(offset, yOffset))
+      );
+    }
     
-    const yOffset = 100 + 30 * hasSelf + 30 * position;
-    
-    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
-        .scale(1/2, 1/HighScore._HEIGHT_SCALE)
-        .translate(new Coordinate(-110, yOffset));
-        
-    return topLeft;
-  }
-  
-  static _getScoreCoord(canvas, position, hasSelf) {
-    assertParameters(arguments, Canvas, Number, Boolean);
-    
-    const yOffset = 100 + 30 * hasSelf + 30 * position;
-    
-    const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
-        .scale(1/2, 1/HighScore._HEIGHT_SCALE)
-        .translate(new Coordinate(150, yOffset));
-        
-    return topLeft;
+    return topLefts;
   }
   
   static _getRetrieveCoord(canvas) {
@@ -104,6 +88,15 @@ class HighScore {
     const topLeft = (new Size(canvas.width, canvas.height)).toCoordinate()
         .scale(1/2, 1/HighScore._HEIGHT_SCALE)
         .translate(new Coordinate(0, 140));
+        
+    return topLeft;
+  }
+  
+  static _getResultRankCoord(canvas) {
+    assertParameters(arguments, Canvas);
+    
+    const topLeft = HighScore._getTitleCoord(canvas)
+        .translate(new Coordinate(0, 120));
         
     return topLeft;
   }
@@ -125,18 +118,33 @@ class HighScore {
     
     // Get high scores
     if (this._haveHighScores) {
-      for (let position = 1; position <= this._scores.length; position ++) {
-        let entry = this._scores[position - 1];
+      let position = 0;
+      let score = -1;
+      
+      for (let i = 1; i <= this._scores.length; i ++) {
+        const entry = this._scores[i - 1];
+        
+        if (score !== entry.score) {
+          position = i;
+        }
+        
+        const topLefts = HighScore._getRowCoords(this._canvas, i, this._hasSelf);
         
         this._canvas.drawText(
-            HighScore._getRankCoord(this._canvas, position, this._hasSelf),
-            position.toString(), 'left', HighScore._LEADERBOARD_FONT);
+            topLefts[0], position.toString(), 'left', HighScore._LEADERBOARD_FONT);
         this._canvas.drawText(
-            HighScore._getNameCoord(this._canvas, position, this._hasSelf),
-            entry.name, 'left', HighScore._LEADERBOARD_FONT);
+            topLefts[1], entry.name, 'left', HighScore._LEADERBOARD_FONT);
         this._canvas.drawText(
-            HighScore._getScoreCoord(this._canvas, position, this._hasSelf),
-            entry.score.toString(), 'right', HighScore._LEADERBOARD_FONT);
+            topLefts[2], entry.score.toString(), 'right', HighScore._LEADERBOARD_FONT);
+            
+        score = entry.score;
+      }
+      
+      // If there is a rank to display
+      if (this._name !== undefined && this._rank !== undefined) {
+         this._canvas.drawText(
+            HighScore._getResultRankCoord(this._canvas),
+            'Your rank: ' + this._rank, 'center', HighScore._RESULT_RANK_FONT);
       }
     } else {
       this._canvas.drawText(HighScore._getRetrieveCoord(this._canvas),
@@ -196,6 +204,7 @@ HighScore._TITLE_TEXT = 'HEX2048';
 HighScore._TITLE_FONT = '60px Arial';
 HighScore._HS_TEXT = 'High Scores';
 HighScore._HS_FONT = '40px Arial';
+HighScore._RESULT_RANK_FONT = '35px Arial'
 HighScore._RETRIEVE_TEXT = 'Retrieving Scores...';
 HighScore._RETRIEVE_FONT = '28px Arial';
 HighScore._HOME_TEXT = 'Home';

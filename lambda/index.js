@@ -46,7 +46,7 @@ class GetRank {
       return echo(new ErrorResponse('score not valid'));
     }
     
-    const query = { score: { $lt: this._score } };
+    const query = { score: { $gt: this._score } };
     
     collection.count(query, (err, count) => {
       if (err) throw err;

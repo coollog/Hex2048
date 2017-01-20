@@ -14,6 +14,7 @@ class Board {
     this._width = this._numPerEdge * 2 - 1;
     this._score = 0;
     
+    // Initiate 2d array of hexagons and the hexagon background (creates the grid)
     this.hexagons = [];
     for (let x = 0; x < this._width; x++) {
       this.hexagons.push(new Array(this._width));
@@ -33,7 +34,7 @@ class Board {
     
     
     // Todo: Remove; just here to test lost functionality
-    this._maxMoves = 3;
+    // this._maxMoves = 3;
     
     // Add the buttons
     const butExitEnv = Board._getExitButtonEnvelope(this._canvas);
@@ -105,7 +106,7 @@ class Board {
       result[col] = new Array(this._width);
       
       for (let row = 0; row < this._width; row ++) {
-        let hexagon = this.hexagons[col][row];
+        const hexagon = this.hexagons[col][row];
         
         // Add in the before values; undefined if hexagon does not exist
         result[col][row] = {
@@ -118,7 +119,7 @@ class Board {
     
     // Find the first hexagon for each line (note first here means the one furthest
     // on the side where all of the hexagons will be compressed to)
-    let starters = this._findStartingIndices(dir);
+    const starters = this._findStartingIndices(dir);
     
     // Iterate through each line and combine/compress as needed
     for (let line = 0; line < this._width; line++) {
@@ -150,13 +151,13 @@ class Board {
       // Create a list of indices of the hexagons in the line
       let indicesInLine = [starters[line]];
       for (let i = 1; i < this._width; i++) {
-        let temp = indicesInLine[i - 1];
+        const temp = indicesInLine[i - 1];
         
         // All hexagons have been considered in this line so break out of loop
         if (typeof temp === 'undefined') break;
         
-        let col = indicesInLine[i - 1][0] + this._iters[dir].line.col;
-        let row = indicesInLine[i - 1][1] + this._iters[dir].line.row;
+        const col = indicesInLine[i - 1][0] + this._iters[dir].line.col;
+        const row = indicesInLine[i - 1][1] + this._iters[dir].line.row;
         
         // Check if this is a valid hexagon
         if (col < this._width && row < this._width && col >= 0 && row >= 0) {
@@ -305,13 +306,28 @@ class Board {
     return this._score;
   }
   
+  // Return the number of hexagons without numbers left
+  numberOpen() {
+    assertParameters(arguments);
+    
+    let open = 0;
+    
+    for (let row of this.hexagons) {
+      for (let hexagon of row) {
+        if (hexagon !== undefined && hexagon.text === '') open++;
+      }
+    }
+    
+    return open;
+  }
+  
   // Return true if player lost
   lost() {
     assertParameters(arguments);
     
-    if (--this._maxMoves <= 0) return true;
+    // if (--this._maxMoves <= 0) return true;
     
-    if (!this._isFilled()) return false;
+    if (this.numberOpen() > 0) return false;
   
     for (let dir = 0; dir < 6; dir++) {
       const result = this.collapse(dir);
@@ -369,14 +385,8 @@ class Board {
     return new Envelope(topLeft, Board._BUTTON_SIZE);
   }
   
-  // Draw all of the hexagon shapes and their text; draw score
+  // Draw the score at the top left corner
   _drawAll() {
-    assertParameters(arguments);
-    
-    this._drawScore();
-  }
-  
-  _drawScore() {
     assertParameters(arguments);
     
     this._canvas.drawText(Board._SCORE_COORD, this._score.toString(), 'left', Board._SCORE_FONT);
@@ -386,57 +396,57 @@ class Board {
   _defineIters() {
     assertParameters(arguments);
     
-    let ITER_TOP_RIGHT = {
+    const ITER_TOP_RIGHT = {
       start:  {col: 0,                          row: this._numPerEdge - 1},
       first:  {col: 0,                          row: 1},
       second: {col: 1,                          row: 0},
       line:   {col: 1,                          row: -1}
-    }
+    };
     
-    let ITER_UP = {
+    const ITER_UP = {
       start:  {col: this._numPerEdge - 1,       row: 0},
       first:  {col: -1,                         row: 1},
       second: {col: 0,                          row: 1},
       line:   {col: 1,                          row: 0}
-    }
+    };
     
-    let ITER_TOP_LEFT = {
+    const ITER_TOP_LEFT = {
       start:  {col: (this._numPerEdge - 1) * 2, row: 0},
       first:  {col: -1,                         row: 0},
       second: {col: -1,                         row: 1},
       line:   {col: 0,                          row: 1}
-    }
+    };
     
-    let ITER_BOTTOM_LEFT = {
+    const ITER_BOTTOM_LEFT = {
       start:  {col: this._numPerEdge - 1,       row: 0},
       first:  {col: 1,                          row: 0},
       second: {col: 0,                          row: 1},
       line:   {col: -1,                         row: 1}
-    }
+    };
     
-    let ITER_DOWN = {
+    const ITER_DOWN = {
       start:  {col: (this._numPerEdge - 1) * 2, row: 0},
       first:  {col: 0,                          row: 1},
       second: {col: -1,                         row: 1},
       line:   {col: -1,                         row: 0}
-    }
+    };
     
-    let ITER_BOTTOM_RIGHT = {
+    const ITER_BOTTOM_RIGHT = {
       start:  {col: (this._numPerEdge - 1) * 2, row: this._numPerEdge - 1},
       first:  {col: -1,                         row: 1},
       second: {col: -1,                         row: 0},
       line:   {col: 0,                          row: -1}
-    }
+    };
     
     this._iters = [ITER_TOP_RIGHT, ITER_UP, ITER_TOP_LEFT, 
-        ITER_BOTTOM_LEFT, ITER_DOWN, ITER_BOTTOM_RIGHT]
+        ITER_BOTTOM_LEFT, ITER_DOWN, ITER_BOTTOM_RIGHT];
   }
   
   // Find starting indices
   _findStartingIndices(dir) {
     assertParameters(arguments, Number);
     
-    let iter = this._iters[dir];
+    const iter = this._iters[dir];
     
     let indices = [];
     
@@ -446,29 +456,11 @@ class Board {
       indices.push([
         indices[i - 1][0] + ((i < this._numPerEdge) ? iter.first.col : iter.second.col),
         indices[i - 1][1] + ((i < this._numPerEdge) ? iter.first.row : iter.second.row)
-      ])
+      ]);
     }
-    
-    // for (let i = 0; i < this._width; i++) {
-    //   console.log(indices[i].x + "," + indices[i].y);
-    // }
     
     return indices;
   }
-  
-  // If all the hexagons are filled with numbers
-  _isFilled() {
-    assertParameters(arguments);
-    
-    for (let row of this.hexagons) {
-      for (let hexagon of row) {
-        if (hexagon !== undefined && hexagon.text === '') return false;
-      }
-    }
-    
-    return true;
-  }
-  
   
   // Returns true if (row, col) is a valid hexagon position.
   _isIndexInside(row, col) {

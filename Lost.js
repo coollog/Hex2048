@@ -16,7 +16,8 @@ class Lost {
       y: nameInputEnv.topLeft.y,
       width: nameInputEnv.size.width,
       height: nameInputEnv.size.height,
-      placeHolder: 'Name'
+      placeHolder: 'Name',
+      maxlength: 10
     });
     
     const butBackToHomeEnv = Lost._getBackToHomeButtonEnvelope(this._canvas);
@@ -122,6 +123,9 @@ class Lost {
   }
   
   _submit(button) {
+    // Check if the entry is empty
+    if (this._input.value() === '') return;
+    
     // Prevent this from being activated multiple times
     button.disable();
     
@@ -132,16 +136,13 @@ class Lost {
       name: this._input.value(),
       score: this._board.score
     };
-
-    // Make sure an actual name was inputted
-    if (data.name === '') return;
     
+    // Add score
     HighScore.callLambda('addScore', data).then((res) => {
       if (res.success) {
+        // Get rank
         HighScore.callLambda('getRank', {score: data.score}).then((res) => {
           if (res.success) {
-            console.log(res.rank);
-            
             // Go to high scores
             Events.dispatch(Lost.EVENT_TYPES.GOTO_HIGH_SCORE, [data.name, res.rank]);
           }

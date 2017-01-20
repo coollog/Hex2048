@@ -127,13 +127,13 @@ Controller.StartingState = class extends Controller.State {
   _controllerReady() {
     assertParameters(arguments);
     
-    const board = new Board(canvas, new Coordinate(340, 340), 4, 50);
+    const board = new Board(canvas, new Coordinate(340, 340), 3, 60);
     // Start drawing the board.
     board.createAll();
     
     // Generate a new board.
     // TODO: Move into board. Call it initRandom().
-    for (let i = 0; i < 30; i ++) {
+    for (let i = 0; i < 10; i ++) {
       board.addRandom();
     }
     
@@ -293,20 +293,32 @@ Controller.AnimatingState = class extends Controller.State {
     }
     
     // Update board to be the result.
-    this._controller.board
-      .updateWithResult(this._collapsedResult)
-      .addRandom();
+    this._controller.board.updateWithResult(this._collapsedResult);
+    for (let i = 0; i < 2; i++) {
+      // If cannot add the needed number of new blocks, then player lost
+      if (this._controller.board.numberOpen() < 1) {
+        this._lost();
+        return;
+      }
+      
+      this._controller.board.addRandom();
+    }
       
     // Check if lost 
     if (this._controller.board.lost()) {
-      // Disable gesture drawing
-      Events.dispatch(GestureHandler.EVENT_TYPES.OFF);
-      this._controller.board.remove();
-
-      this._controller.state = new Controller.LostState();
+      this._lost();
     } else {
       this._controller.state = new Controller.ReadyState();
     }
+  }
+  
+  // Called when the player lost
+  _lost() {
+    // Disable gesture drawing
+    Events.dispatch(GestureHandler.EVENT_TYPES.OFF);
+    this._controller.board.remove();
+
+    this._controller.state = new Controller.LostState();
   }
 };
 
