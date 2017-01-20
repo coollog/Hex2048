@@ -6,13 +6,41 @@
   assets {
     display: none;
   }
+  #main-container {
+    width:720px;
+  }
+  textcontent p {
+    width:720px;
+  }
+  .center {
+    text-align: center;
+  }
+  .padded-bottom {
+    margin-bottom: 3cm;
+  }
 </style>
-
-<canvas id="game" width="720" height="680" tabindex="1"></canvas>
 
 <assets>
   <img id="img-right-arrow" src="assets/right_arrow.png" />
 </assets>
+
+<div id='main-container'>
+  <canvas id='game' width='720' height='680' tabindex='1'></canvas>
+  
+  <h3>Welcome to Hex2048!</h3>
+  <p>Combine hexagons of the same number to get bigger numbers.  Try to reach the 2048 tile and more!</p>
+  
+  <h3>Controls:</h3>
+  <ul>
+    <li>Mouse drag and drop</li>
+    <li>Keyboard keys: QWEASD</li>
+  </ul>
+  <div class="padded-bottom"></div>
+  
+  <footer>
+    <p class='center'><small>Created by Qingyang Chen and Huajun Gu</small></p>
+  </footer>
+</div>
 
 <script src="js/Assert.js"></script>
 <script src="js/CanvasInput.js"></script>
