@@ -46,7 +46,7 @@ class GestureHandler {
     
     this._canvas.drawWithOpacity(0.5, () => {
       if (this._dragging) {
-        this._canvas.drawLine(this._dragStartCoord, this._dragCurrentCoord);
+        // this._canvas.drawLine(this._dragStartCoord, this._dragCurrentCoord);
         
         if (this._hasGesture()) {
           const originCoord = new Coordinate(0, -imgRightArrow.height / 2);
