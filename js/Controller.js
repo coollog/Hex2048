@@ -297,8 +297,7 @@ Controller.AnimatingState = class extends Controller.State {
     for (let i = 0; i < 2; i++) {
       // If cannot add the needed number of new blocks, then player lost
       if (this._controller.board.numberOpen() < 1) {
-        this._lost();
-        return;
+        break;
       }
       
       this._controller.board.addRandom();

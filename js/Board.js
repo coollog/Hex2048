@@ -287,7 +287,12 @@ class Board {
       
       let hexagon = this.hexagons[col][row];
       if (typeof hexagon !== 'undefined' && hexagon.text == '') {
-        hexagon.text = Math.random() < 0.5 ? '2' : '4'; 
+        // Note that purposely harder to get a 8 than 2 or 4
+        if (Math.random() < 0.8) {
+          hexagon.text = Math.random() < 0.5 ? '2' : '4';
+        } else {
+          hexagon.text = '8';
+        }
         break;
       }
     }
