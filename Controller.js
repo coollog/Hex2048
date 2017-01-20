@@ -133,7 +133,7 @@ Controller.StartingState = class extends Controller.State {
     
     // Generate a new board.
     // TODO: Move into board. Call it initRandom().
-    for (let i = 0; i < 10; i ++) {
+    for (let i = 0; i < 6; i ++) {
       board.addRandom();
     }
     
@@ -294,7 +294,7 @@ Controller.AnimatingState = class extends Controller.State {
     
     // Update board to be the result.
     this._controller.board.updateWithResult(this._collapsedResult);
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 1; i++) {
       // If cannot add the needed number of new blocks, then player lost
       if (this._controller.board.numberOpen() < 1) {
         this._lost();
