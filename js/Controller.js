@@ -211,8 +211,6 @@ Controller.AnimatingState = class extends Controller.State {
     
     // Time steps for animation.
     this._animated = 0;
-    
-    // This marks whether or not the board is fading
   }
   
   // Animates the board toward the collapsed result.
@@ -233,8 +231,6 @@ Controller.AnimatingState = class extends Controller.State {
     assertParameters(arguments);
     
     this._createAnimatingHexagons();
-    
-    Events.on(Board.EVENT_TYPES.FINISHED_FADING, this._finishedFading, this);
   }
   
   _createAnimatingHexagons() {
