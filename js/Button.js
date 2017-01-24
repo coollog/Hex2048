@@ -16,17 +16,25 @@ class Button {
     this._strokeOpacity = new Transition(1, 1, 0, Easing.CubicOut);
     
     Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this);
+    
     this.enable();
+    this._enabled = true;
 	}
 
   enable() {
     assertParameters(arguments);
     
+    if (this._enabled) return;
+    
     Events.on(InputHandler.EVENT_TYPES.CLICK, this._clicked, this);
     Events.on(InputHandler.EVENT_TYPES.HOVER, this._hovered, this);
+    
+    this._enabled = true;
   }
   disable() {
     assertParameters(arguments);
+    
+    if (!this._enabled) return;
     
     Events.off(InputHandler.EVENT_TYPES.CLICK, this);
     Events.off(InputHandler.EVENT_TYPES.HOVER, this);
@@ -34,6 +42,8 @@ class Button {
     if (this._hover) {
       this._canvas.element.style.cursor = Button.CURSOR_OFF;
     }
+    
+    this._enabled = false;
   }
 
   remove() {

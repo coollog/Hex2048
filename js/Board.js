@@ -14,6 +14,9 @@ class Board {
     this._width = this._numPerEdge * 2 - 1;
     this._score = 0;
     
+    this._fading = false;
+    this._opacity = 1.0;      // This will decrease when lost to cause fading out
+    
     // Initiate 2d array of hexagons and the hexagon background (creates the grid)
     this.hexagons = [];
     for (let x = 0; x < this._width; x++) {
@@ -34,7 +37,7 @@ class Board {
     
     
     // Todo: Remove; just here to test lost functionality
-    // this._maxMoves = 3;
+    this._maxMoves = 3;
     
     // Add the buttons
     const butExitEnv = Board._getExitButtonEnvelope(this._canvas);
@@ -311,6 +314,11 @@ class Board {
     return this._score;
   }
   
+  // Return true if fading (occurs when player lost; transitions to Lost state)
+  get fading() {
+    return this._fading;
+  }
+  
   // Return the number of hexagons without numbers left
   numberOpen() {
     assertParameters(arguments);
@@ -330,7 +338,7 @@ class Board {
   lost() {
     assertParameters(arguments);
     
-    // if (--this._maxMoves <= 0) return true;
+    if (--this._maxMoves <= 0) return true;
     
     if (this.numberOpen() > 0) return false;
   
@@ -344,28 +352,46 @@ class Board {
     return true;
   }
   
+  // Initiate fade
+  startFade() {
+    assertParameters(arguments);
+    
+    // Remove both buttons
+    if (this._butExit) {
+      this._butExit.remove();
+      this._butExit = undefined;
+    }
+    
+    if (this._butRestart) {
+      this._butRestart.remove();
+      this._butRestart = undefined;
+    }
+    
+    this._fading = true;
+  }
+  
   // Deactivate all events related to this page.
   remove() {
+    assertParameters(arguments);
+    
     Events.off(DrawTimer.EVENT_TYPES.DRAW, this);
     
-    for (let col of this.hexagons) {
+    function removeHex(hexagon) {
+      hexagon.remove();
+    }
+    
+    Board.iterHexagons(this.hexagons, removeHex);
+    Board.iterHexagons(this.hexagonBackgrounds, removeHex);
+  }
+  
+  static iterHexagons(hexagons, func) {
+    for (let col of hexagons) {
       for (let hexagon of col) {
         if (hexagon === undefined) continue;
         
-        hexagon.remove();
+        func(hexagon);
       }
     }
-    
-    for (let col of this.hexagonBackgrounds) {
-      for (let hexagonBackground of col) {
-        if (hexagonBackground === undefined) continue;
-        
-        hexagonBackground.remove();
-      }
-    }
-    
-    this._butExit.remove();
-    this._butRestart.remove();
   }
   
   static get _BUTTON_SIZE() {
@@ -394,7 +420,16 @@ class Board {
   _drawAll() {
     assertParameters(arguments);
     
-    this._canvas.drawText(Board._SCORE_COORD, this._score.toString(), 'left', Board._SCORE_FONT);
+    if (this._fading) {
+      this._increaseFade();
+    }
+    
+    function drawScore() {
+      this._canvas.drawText(
+          Board._SCORE_COORD, this._score.toString(), 'left', Board._SCORE_FONT);
+    }
+    
+    this._canvas.drawWithOpacity(this._opacity, drawScore.bind(this));
   }
   
   // Define the iterator values (should only be called once in constructor)
@@ -487,6 +522,29 @@ class Board {
     return 2 * half - Math.abs(half - col) + 1;
   }
   
+  // This is called every time in draw if fading out.  Opacity will decrease and
+  // cause everything to fade out
+  _increaseFade() {
+    assertParameters(arguments);
+    
+    const increments = 1.0 / Board._FADE_OUT_FRAMES;
+    this._opacity -= increments;
+    
+    // If have finished fading, then dispatch event
+    if (this._opacity <= 0.1) {
+      Events.dispatch(Board.EVENT_TYPES.FINISHED_FADING);
+      return;
+    }
+    
+    // Set the opacity of hexagons to be lower (let them fade out)
+    function fadeHex(hexagon) {
+      hexagon.opacity = this._opacity;
+    }
+    
+    Board.iterHexagons(this.hexagons, fadeHex.bind(this));
+    Board.iterHexagons(this.hexagonBackgrounds, fadeHex.bind(this));
+  }
+  
   _exit(button) {
     // Prevent this from being activated multiple times
     button.disable();
@@ -506,11 +564,13 @@ class Board {
 
 Board._BUTTON_WIDTH = 100;
 Board._BUTTON_HEIGHT = 30;
+Board._FADE_OUT_FRAMES = 350;
 
 Board._SCORE_COORD = new Coordinate(10, 15);
 Board._SCORE_FONT = '30px Arial';
 
 Board.EVENT_TYPES = {
   GOTO_HOME: 'board-goto-home',
-  GOTO_STARTING: 'board-goto-starting'
+  GOTO_STARTING: 'board-goto-starting',
+  FINISHED_FADING: 'board-finished-fading'
 };

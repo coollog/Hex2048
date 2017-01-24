@@ -11,6 +11,7 @@ class Hexagon {
     this._radius = radius;
     this._text = '';
     this._color;
+    this._opacity = 1.0;
     
     this._shouldDraw = true;
     
@@ -64,6 +65,12 @@ class Hexagon {
     this._color = color;
     this._highlight = highlight;
     this._textColor = textColor;
+  }
+
+  set opacity(opacity) {
+    assertParameters(arguments, Number);
+    
+    this._opacity = opacity;
   }
 
   // Draw the actual hexagon shape
@@ -134,8 +141,12 @@ class Hexagon {
   _draw() {
     assertParameters(arguments);
     
-    this._drawShape();
-    this._drawText();
+    function drawAll() {
+      this._drawShape();
+      this._drawText();
+    }
+    
+    this._canvas.drawWithOpacity(this._opacity, drawAll.bind(this));
   }
   
   _drawWithCoords(coords) {

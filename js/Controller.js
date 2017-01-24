@@ -211,11 +211,15 @@ Controller.AnimatingState = class extends Controller.State {
     
     // Time steps for animation.
     this._animated = 0;
+    
+    // This marks whether or not the board is fading
   }
   
   // Animates the board toward the collapsed result.
   step() {
     assertParameters(arguments);
+    
+    if (this._controller.board.fading) return;
     
     if (this._animated === Controller.AnimatingState.ANIMATE_MAX) {
       this._animationFinished();
@@ -229,6 +233,8 @@ Controller.AnimatingState = class extends Controller.State {
     assertParameters(arguments);
     
     this._createAnimatingHexagons();
+    
+    Events.on(Board.EVENT_TYPES.FINISHED_FADING, this._finishedFading, this);
   }
   
   _createAnimatingHexagons() {
@@ -313,10 +319,22 @@ Controller.AnimatingState = class extends Controller.State {
   
   // Called when the player lost
   _lost() {
+    assertParameters(arguments);
+    
     // Disable gesture drawing
     Events.dispatch(GestureHandler.EVENT_TYPES.OFF);
+    
+    // Start fading out
+    this._controller.board.startFade();
+  }
+  
+  _finishedFading() {
+    assertParameters(arguments);
+    
     this._controller.board.remove();
-
+    
+    Events.off(Board.EVENT_TYPES.FINISHED_FADING, this);
+    
     this._controller.state = new Controller.LostState();
   }
 };
