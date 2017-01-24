@@ -324,17 +324,10 @@ Controller.AnimatingState = class extends Controller.State {
     // Disable gesture drawing
     Events.dispatch(GestureHandler.EVENT_TYPES.OFF);
     
+    // Deactivate and stop drawing the exit and restart buttons
+    this._controller.board.removeButtons();
+    
     // Start fading out
-    this._controller.board.startFade();
-  }
-  
-  _finishedFading() {
-    assertParameters(arguments);
-    
-    this._controller.board.remove();
-    
-    Events.off(Board.EVENT_TYPES.FINISHED_FADING, this);
-    
     this._controller.state = new Controller.LostState();
   }
 };

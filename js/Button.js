@@ -64,7 +64,10 @@ class Button {
         
     this._strokeOpacity.update();
     this._canvas.drawWithOpacity(this._strokeOpacity.value, 
-        this._canvas.drawRectangle.bind(this._canvas, this._envelope));
+        this._canvas.drawRectangle.bind(
+            this._canvas, Canvas.RECTANGLE_TYPE.STROKE, this._envelope
+        )
+    );
     this._canvas.drawText(this._envelope.center, this._text, 'center', '20px Arial');
   }
 

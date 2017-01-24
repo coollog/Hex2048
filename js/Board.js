@@ -338,7 +338,7 @@ class Board {
   lost() {
     assertParameters(arguments);
     
-    if (--this._maxMoves <= 0) return true;
+    // if (--this._maxMoves <= 0) return true;
     
     if (this.numberOpen() > 0) return false;
   
@@ -357,6 +357,15 @@ class Board {
     assertParameters(arguments);
     
     // Remove both buttons
+    this.removeButtons();
+    
+    this._fading = true;
+  }
+  
+  // Deactivate and stop drawing buttons
+  removeButtons() {
+    assertParameters(arguments);
+    
     if (this._butExit) {
       this._butExit.remove();
       this._butExit = undefined;
@@ -366,11 +375,9 @@ class Board {
       this._butRestart.remove();
       this._butRestart = undefined;
     }
-    
-    this._fading = true;
   }
   
-  // Deactivate all events related to this page.
+  // Stop drawing the board
   remove() {
     assertParameters(arguments);
     

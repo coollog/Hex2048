@@ -47,11 +47,22 @@ class Canvas {
   }
   
   // Draw a stroke rectangle with coord = top left corner.
-  drawRectangle(envelope) {
-    assertParameters(arguments, Envelope);
+  drawRectangle(type, envelope, color = undefined) {
+    assertParameters(arguments, Number, Envelope, [String, undefined]);
     
-    this._context.strokeRect(
-        ...envelope.topLeft.toArray(), ...envelope.size.toArray());
+    switch (type) {
+      case Canvas.RECTANGLE_TYPE.STROKE:
+        this._context.strokeRect(
+            ...envelope.topLeft.toArray(), ...envelope.size.toArray());
+        break;
+      case Canvas.RECTANGLE_TYPE.FILL:
+        if (color) this._context.fillStyle = color;
+        this._context.fillRect(
+            ...envelope.topLeft.toArray(), ...envelope.size.toArray());
+        break;
+      default:
+        return;
+    }
   }
   
   // Draw polygon shape (will apply color and stroke).
@@ -127,3 +138,8 @@ class Canvas {
     return new Coordinate(x, y);
   }
 }
+
+Canvas.RECTANGLE_TYPE = {
+  STROKE: 0,
+  FILL: 1
+};
