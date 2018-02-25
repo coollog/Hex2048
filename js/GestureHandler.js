@@ -18,6 +18,10 @@ class GestureHandler {
     Events.on(InputHandler.EVENT_TYPES.DRAG_START, this._dragStart, this);
     Events.on(InputHandler.EVENT_TYPES.DRAG, this._drag, this);
     Events.on(InputHandler.EVENT_TYPES.DRAG_END, this._dragEnd, this);
+
+    Events.on(InputHandler.EVENT_TYPES.TOUCH_START, this._dragStart, this);
+    Events.on(InputHandler.EVENT_TYPES.TOUCH, this._drag, this);
+    Events.on(InputHandler.EVENT_TYPES.TOUCH_END, this._dragEnd, this);
     
     Events.on(DrawTimer.EVENT_TYPES.DRAW, this._draw, this, 100);
     

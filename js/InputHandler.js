@@ -8,6 +8,7 @@ class InputHandler {
     
     this._canvas = canvas;
     this._dragging = false;
+    this._touching = false;
     
     // Attach the event listeners.
     canvas.listen('mousedown', this._dragStart.bind(this));
@@ -16,6 +17,9 @@ class InputHandler {
     canvas.listen('keydown', this._key.bind(this));
     canvas.listen('click', this._click.bind(this));
     canvas.listen('mousemove', this._hover.bind(this));
+    canvas.listen('touchstart', this._touchStart.bind(this));
+    canvas.listen('touchmove', this._touch.bind(this));
+    canvas.listen('touchend', this._touchEnd.bind(this));
   }
   
   _dragStart(e) {
@@ -57,11 +61,40 @@ class InputHandler {
     this._dispatchMouseEvent(e, InputHandler.EVENT_TYPES.HOVER);
   }
 
+  _touchStart(e) {
+    assertParameters(arguments, TouchEvent);
+
+    this._touching = true;
+    this._dispatchTouchEvent(e, InputHandler.EVENT_TYPES.TOUCH_START);
+  }
+  _touch(e) {
+    assertParameters(arguments, TouchEvent);
+
+    if (!this._touching) return;
+    this._dispatchTouchEvent(e, InputHandler.EVENT_TYPES.TOUCH);
+  }
+  _touchEnd(e) {
+    assertParameters(arguments, TouchEvent);
+
+    if (!this._touching) return;
+    this._touching = false;
+    this._dispatchTouchEvent(e, InputHandler.EVENT_TYPES.TOUCH_END);
+  }
+
   _dispatchMouseEvent(e, eventType) {
     assertParameters(arguments, MouseEvent, InputHandler.EVENT_TYPES);
     
-    const mousePosition = this._canvas.getMousePosition(e);
-    Events.dispatch(eventType, mousePosition);
+    const canvasPosition = this._canvas.scaleScreenPosition(e.clientX, e.clientY);
+    Events.dispatch(eventType, canvasPosition);
+  }
+
+  _dispatchTouchEvent(e, eventType) {
+    assertParameters(arguments, TouchEvent, InputHandler.EVENT_TYPES);
+
+    const clientX = e.changedTouches[0].pageX;
+    const clientY = e.changedTouches[0].pageY;
+    const canvasPosition = this._canvas.scaleScreenPosition(clientX, clientY);
+    Events.dispatch(eventType, canvasPosition);
   }
 }
 
@@ -71,5 +104,8 @@ InputHandler.EVENT_TYPES = {
   DRAG_END: 'input-dragend',
   KEY: 'input-key',
   CLICK: 'input-click',
-  HOVER: 'input-hover'
+  HOVER: 'input-hover',
+  TOUCH_START: 'input-touchstart',
+  TOUCH: 'input-touch',
+  TOUCH_END: 'input-touchend'
 };
