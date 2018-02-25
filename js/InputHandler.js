@@ -95,6 +95,7 @@ class InputHandler {
     const clientY = e.changedTouches[0].pageY;
     const canvasPosition = this._canvas.scaleScreenPosition(clientX, clientY);
     Events.dispatch(eventType, canvasPosition);
+    e.preventDefault();
   }
 }
 
