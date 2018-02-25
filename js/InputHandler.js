@@ -64,17 +64,23 @@ class InputHandler {
   _touchStart(e) {
     assertParameters(arguments, TouchEvent);
 
+    e.preventDefault();
+
     this._touching = true;
     this._dispatchTouchEvent(e, InputHandler.EVENT_TYPES.TOUCH_START);
   }
   _touch(e) {
     assertParameters(arguments, TouchEvent);
 
+    e.preventDefault();
+
     if (!this._touching) return;
     this._dispatchTouchEvent(e, InputHandler.EVENT_TYPES.TOUCH);
   }
   _touchEnd(e) {
     assertParameters(arguments, TouchEvent);
+
+    e.preventDefault();
 
     if (!this._touching) return;
     this._touching = false;
@@ -95,7 +101,6 @@ class InputHandler {
     const clientY = e.changedTouches[0].pageY;
     const canvasPosition = this._canvas.scaleScreenPosition(clientX, clientY);
     Events.dispatch(eventType, canvasPosition);
-    e.preventDefault();
   }
 }
 
