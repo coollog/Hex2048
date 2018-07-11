@@ -125,15 +125,15 @@ class Canvas {
     this._context.restore();
   }
   
-  getMousePosition(e) {
-    assertParameters(arguments, MouseEvent);
+  scaleScreenPosition(clientX, clientY) {
+    assertParameters(arguments, Number, Number);
     
     const canvasRect = this._canvas.getBoundingClientRect();
     const x =
-        (e.clientX - canvasRect.left) / canvasRect.width *
+        (clientX - canvasRect.left) / canvasRect.width *
         this._canvas.width;
     const y =
-        (e.clientY - canvasRect.top) / canvasRect.height *
+        (clientY - canvasRect.top) / canvasRect.height *
         this._canvas.height;
     return new Coordinate(x, y);
   }
